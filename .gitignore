@@ -1,0 +1,13 @@
+obj_*/
+data/
+logs/
+.vscode/
+*.map
+*.a
+symbols.c
+symbols.h
+*.native
+*.z1
+*.sky
+*.wismote
+log
