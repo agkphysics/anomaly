@@ -8,6 +8,8 @@
 #include <stdio.h>
 
 #define VAL_LEN 4
+#define COMMUNICATION
+#define ROOT_NODE 1
 
 struct IBRL {
     uint16_t epoch;

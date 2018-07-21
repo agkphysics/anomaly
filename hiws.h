@@ -8,6 +8,9 @@
 #include <stdio.h>
 
 #define VAL_LEN 6
+#ifdef COMMUNICATION
+#undef COMMUNICATION
+#endif
 
 struct HIWS {
     uint16_t epoch;
