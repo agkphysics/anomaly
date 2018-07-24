@@ -1,7 +1,6 @@
 # processHeron.py - Process the Heron Island data
 #
 # Author: Aaron Keesing
-# Date: 14/07/18
 
 import pandas as pd
 

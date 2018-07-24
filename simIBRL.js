@@ -1,5 +1,5 @@
 /*
- * sim.js - Simulation script that automates setting up and running the
+ * simIBRL.js - Simulation script that automates setting up and running the
  * simulation with data files added to each filesystem.
  */
 
