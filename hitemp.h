@@ -10,6 +10,7 @@
 #define VAL_LEN 1
 #define COMMUNICATION
 #define ROOT_NODE 1
+#define NUM_SENSORS 10
 
 struct HITEMP {
     uint16_t epoch;

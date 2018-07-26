@@ -10,6 +10,7 @@
 #define VAL_LEN 4
 #define COMMUNICATION
 #define ROOT_NODE 1
+#define NUM_SENSORS 52
 
 struct IBRL {
     uint16_t epoch;
