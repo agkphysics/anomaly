@@ -10,7 +10,7 @@
 #include "net/rime/runicast.h"
 #include "cfs/cfs.h"
 
-#include "hitemp.h"
+#include "dataset/hiws.h"
 #include "common.h"
 #include "mat.h"
 
@@ -163,7 +163,7 @@ PROCESS_THREAD(anomaly_process, ev, data)
             printf("\n");
 #endif
 
-            int j = (int)floorf(0.1*NUM_READINGS);
+            int j = (int)floorf(NU*NUM_READINGS);
             lradius = d.arr[NUM_READINGS - 1 - j];
             if (linkaddr_node_addr.u8[0] == ROOT_NODE) {
                 rList[ROOT_NODE-1] = lradius;
@@ -199,20 +199,26 @@ PROCESS_THREAD(anomaly_process, ev, data)
 
             cfs_write(logfile, logbuf, strlen(logbuf));
             printf(logbuf);
+#ifdef COMMUNICATION
             if (linkaddr_node_addr.u8[0] != ROOT_NODE) {
                 packetbuf_clear();
                 packetbuf_copyfrom(&lradius, sizeof(real));
                 packetbuf_set_datalen(sizeof(real));
                 runicast_send(&ruc, &rootAddr, RXMITS);
             }
+#endif
         }
 #ifdef COMMUNICATION
         else if (ev == EVENT_RAD) {
             if (!isChild) {
-                real r = 0;
-                for (int i = 0; i < NUM_SENSORS; i++)
-                    r += rList[i];
-                gradius = r / (real)NUM_SENSORS;
+                // real r = 0;
+                // for (int i = 0; i < NUM_SENSORS; i++)
+                //     r += rList[i];
+                // gradius = r / (real)NUM_SENSORS;
+
+                // Aggregate radii via median
+                sort(rList, NUM_SENSORS);
+                gradius = rList[NUM_SENSORS / 2];
                 printf("gradius: %ld\n", (long)(gradius*1e6));
                 packetbuf_clear();
                 packetbuf_copyfrom(&gradius, sizeof(real));

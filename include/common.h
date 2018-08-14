@@ -11,6 +11,7 @@
 
 #define BUF_LEN 40
 #define NUM_READINGS 20
+#define NU 0.1
 
 typedef float real;
 

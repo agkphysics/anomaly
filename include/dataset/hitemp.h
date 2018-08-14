@@ -1,8 +1,8 @@
-#ifndef HITEMP_H
-#define HITEMP_H
+#ifndef DATASET
+#define DATASET
 
 #include "contiki.h"
-#include "common.h"
+#include "../common.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -12,14 +12,14 @@
 #define ROOT_NODE 1
 #define NUM_SENSORS 10
 
-struct HITEMP {
+struct sensorval {
     uint16_t epoch;
     real temp;
 };
-typedef struct HITEMP sensorval;
+typedef struct sensorval sensorval;
 
 static const char *delim = " \n";
-char * getNextReading(char *buf, struct HITEMP *val)
+char * getNextReading(char *buf, struct sensorval *val)
 {
     char *p;
     val->epoch = atoi(strtok(buf, delim));
@@ -27,12 +27,12 @@ char * getNextReading(char *buf, struct HITEMP *val)
     return p;
 }
 
-void getVector(const struct HITEMP *val, float *vect)
+void getVector(const struct sensorval *val, float *vect)
 {
     vect[0] = val->temp;
 }
 
-void printReading(const struct HITEMP *val)
+void printReading(const struct sensorval *val)
 {
     printf("Scaled sensor value for %d: (%ld)\n",
         val->epoch, (long)(val->temp*1000.0));
@@ -52,4 +52,4 @@ int init()
     return 1;
 }
 
-#endif /* HITEMP_H */
+#endif /* DATASET */

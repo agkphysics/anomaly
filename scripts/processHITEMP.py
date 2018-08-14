@@ -1,4 +1,4 @@
-# processHeron.py - Process the Heron Island data
+# processHITEMP.py - Process the Heron Island temperature data
 #
 # Author: Aaron Keesing
 
@@ -29,6 +29,12 @@ df = df.interpolate()
 # Convert to ints
 df *= 1000
 df = df.astype(int)
+
+import matplotlib.pyplot as plt
+
+plt.figure()
+df.plot(legend=False, grid=True, xticks=range(0, 1151, 50), linewidth=0.5)
+plt.show()
 
 for i, node in enumerate(df.columns):
     df.loc[:, node].to_csv(f'./data/HITEMP_{i+1}',

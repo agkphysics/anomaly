@@ -1,4 +1,4 @@
-# processHeron.py - Process the Heron Island data
+# processHIWS.py - Process the Heron Island weather station (single node) data
 #
 # Author: Aaron Keesing
 
@@ -15,7 +15,8 @@ df = df.dropna(0)
 df = df[df['site_code'] == 'HIWS'].drop(columns='site_code')
 df = df[df['VARNAME'].isin(('WSPD_10min', 'WDIR_10min', 'AIRT', 'ATMP', 'RELH',
                             'RAIN_AMOUNT'))]
-df = df[(pd.Timestamp('2009-03-07') < df['TIME']) & (df['TIME'] < pd.Timestamp('2009-03-11'))]
+df = df[(pd.Timestamp('2009-03-07') < df['TIME']) &
+        (df['TIME'] < pd.Timestamp('2009-03-11'))]
 df = df.set_index(['TIME', 'VARNAME']).sort_index()
 df = df.groupby(level=['TIME', 'VARNAME']).mean().unstack('VARNAME')
 df.columns = df.columns.get_level_values('VARNAME')
