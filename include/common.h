@@ -13,7 +13,45 @@
 #define NUM_READINGS 20
 #define NU 0.1
 
+#ifdef NATIVE
+    #define NAME(name) "data/" #name
+#else
+    #define NAME(name) #name
+#endif
+
 typedef float real;
+
+static const char *delim = " \n";
+const real scaling[VAL_LEN];
+
+struct sensorval {
+    uint16_t epoch;
+    real vars[VAL_LEN];
+};
+typedef struct sensorval sensorval;
+
+char * getNextReading(char *buf, struct sensorval *val)
+{
+    char *p;
+    val->epoch = atoi(strtok(buf, delim));
+    for (int i = 0; i < VAL_LEN; i++)
+        val->vars[i] = (float)atol(p = strtok(NULL, delim)) / scaling[i];
+    return p;
+}
+
+void getVector(const struct sensorval *val, float *vect)
+{
+    for (int i = 0; i < VAL_LEN; i++)
+        vect[i] = val->vars[i];
+}
+
+void printReading(const struct sensorval *val)
+{
+    printf("Scaled sensor value for %d: (", val->epoch);
+    for (int i = 0; i < VAL_LEN; i++)
+        printf("%ld, ", (long)(val->vars[i]*scaling[i]));
+    printf(")\n");
+}
 
 /*
  * sort() - sort in ascending order using insertion sort
