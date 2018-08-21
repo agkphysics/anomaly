@@ -7,12 +7,14 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define idx(i, j, n) ((i)*(n) + (j))
+#define idx(i, j, n) (i*(n-1) - i*(i-1)/2 + j)
+
+#pragma pack(1)
 
 typedef float real;
 
 typedef struct Mat {
-    real arr[NUM_READINGS*NUM_READINGS];
+    real arr[NUM_READINGS*(NUM_READINGS+1)/2];
 } Mat;
 
 typedef struct Vec {
@@ -102,26 +104,25 @@ void matsub(const Mat *a, const Mat *b, size_t m, size_t n, Mat *out)
 /*
  * centMat() - centre the matrix k without using matrix multiplications.
  */
-void centMat(const Mat *k, Mat *out)
+void centMat(Mat *k)
 {
-    real colmeans[NUM_READINGS] = {0};
-    real rowmeans[NUM_READINGS] = {0};
+    real means[NUM_READINGS] = {0};
     real mean = 0;
     for (int i = 0; i < NUM_READINGS; i++) {
-        for (int j = 0; j < NUM_READINGS; j++) {
-            colmeans[j] += k->arr[idx(i, j, NUM_READINGS)];
-            rowmeans[i] += k->arr[idx(i, j, NUM_READINGS)];
-            mean += k->arr[idx(i, j, NUM_READINGS)];
+        means[i] += k->arr[idx(i, i, NUM_READINGS)];
+        mean += k->arr[idx(i, i, NUM_READINGS)];
+        for (int j = i + 1; j < NUM_READINGS; j++) {
+            means[i] += k->arr[idx(i, j, NUM_READINGS)];
+            means[j] += k->arr[idx(i, j, NUM_READINGS)];
+            mean += 2*k->arr[idx(i, j, NUM_READINGS)];
         }
     }
+    for (int i = 0; i < NUM_READINGS; i++)
+        means[i] /= (real)NUM_READINGS;
+    mean /= (real)(NUM_READINGS*NUM_READINGS);
     for (int i = 0; i < NUM_READINGS; i++) {
-        colmeans[i] /= (float)NUM_READINGS;
-        rowmeans[i] /= (float)NUM_READINGS;
-    }
-    mean /= (float)(NUM_READINGS*NUM_READINGS);
-    for (int i = 0; i < NUM_READINGS; i++) {
-        for (int j = 0; j < NUM_READINGS; j++) {
-            out->arr[idx(i, j, NUM_READINGS)] = k->arr[idx(i, j, NUM_READINGS)] - colmeans[j] - rowmeans[i] + mean;
+        for (int j = i; j < NUM_READINGS; j++) {
+            k->arr[idx(i, j, NUM_READINGS)] = k->arr[idx(i, j, NUM_READINGS)] - means[i] - means[j] + mean;
         }
     }
 }

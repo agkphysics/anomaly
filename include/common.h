@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define BUF_LEN 40
+#define BUF_LEN 60
 #define NUM_READINGS 20
 #define NU 0.1
 

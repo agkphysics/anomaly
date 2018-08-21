@@ -1,7 +1,12 @@
+ifeq ($(DATASET),)
+$(error Error: DATASET must be set)
+endif
 CONTIKI_PROJECT = anomaly test
-all: $(CONTIKI_PROJECT)
+all: init $(CONTIKI_PROJECT)
+init:
+	rm -f anomaly.$(TARGET)  # To fully rebuild
 TARGET_LIBFILES += -lm  # For math library
-CFLAGS += -I$(shell pwd)/include -std=gnu99  # Cannot be c99 due to 'asm' treated as function
+CFLAGS += -I$(shell pwd)/include -I$(shell pwd)/include/$(DATASET) -std=gnu99  # Cannot be c99 due to 'asm' treated as function
 
 ifeq ($(TARGET),native)
 	DEFINES += NATIVE

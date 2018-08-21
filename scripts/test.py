@@ -12,6 +12,7 @@ K = np.zeros((30, 30))
 for i in range(30):
     for j in range(30):
         K[i, j] = rbf(data[i], data[j])
+print(np.isclose(K, K.T).all())
 one = np.ones_like(K) / 30
 Kc = K - one.dot(K) - K.dot(one) + one.dot(K).dot(one)
 print(sorted(np.diag(Kc)))

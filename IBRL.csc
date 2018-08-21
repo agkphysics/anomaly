@@ -25,7 +25,7 @@
       <identifier>z11</identifier>
       <description>Sensor Node</description>
       <source EXPORT="discard">[CONFIG_DIR]/anomaly.c</source>
-      <commands EXPORT="discard">make anomaly.z1 TARGET=z1</commands>
+      <commands EXPORT="discard">make TARGET=z1 DATASET=ibrl</commands>
       <firmware EXPORT="copy">[CONFIG_DIR]/anomaly.z1</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>

@@ -5,12 +5,11 @@
  */
 
 #include "contiki.h"
-#include "net/rime/mesh.h"
-#include "net/rime/unicast.h"
 #include "net/rime/runicast.h"
+#include "dev/watchdog.h"
 #include "cfs/cfs.h"
 
-#include "dataset/hiws.h"
+#include "dataset.h"
 #include "common.h"
 #include "mat.h"
 
@@ -19,7 +18,7 @@ AUTOSTART_PROCESSES(&anomaly_process);
 
 #define RXMITS 20
 
-static Mat korig, kcent;
+static Mat k;
 static Vec d;
 static sensorval readings[NUM_READINGS];
 static real lradius, gradius;
@@ -121,7 +120,11 @@ PROCESS_THREAD(anomaly_process, ev, data)
     static size_t length = 0;
     static int bytes;
     static int epoch = 0; // For debug purposes
+#ifdef NATIVE
+    etimer_set(&periodTimer, CLOCK_SECOND/2);
+#else
     etimer_set(&periodTimer, CLOCK_SECOND*20);
+#endif
     while (1) {
         PROCESS_WAIT_EVENT();
         if (ev == PROCESS_EVENT_TIMER) {
@@ -130,6 +133,7 @@ PROCESS_THREAD(anomaly_process, ev, data)
             children = 0;
             isValid = 1;
             etimer_reset(&periodTimer);
+            watchdog_stop();
             for (int i = 0; i < NUM_READINGS && (bytes = cfs_read(fp, buf + length, BUF_LEN - length)) > 0; epoch++, i++) {
                 char *p = getNextReading(buf, &readings[i]);
                 //printReading(&readings[i]);
@@ -146,17 +150,17 @@ PROCESS_THREAD(anomaly_process, ev, data)
                 for(int j = i; j < NUM_READINGS; j++) {
                     float vals2[VAL_LEN];
                     getVector(&readings[j], vals2);
-                    korig.arr[idx(i, j, NUM_READINGS)] = korig.arr[idx(j, i, NUM_READINGS)] = rbf(vals1, vals2, VAL_LEN);
+                    k.arr[idx(i, j, NUM_READINGS)] = k.arr[idx(j, i, NUM_READINGS)] = rbf(vals1, vals2, VAL_LEN);
                 }
             }
-            centMat(&korig, &kcent);
+            centMat(&k);
 
             /* Retain only the centred d(xi, xi) values, and sort */
             for (int i = 0; i < NUM_READINGS; i++)
-                d.arr[i] = kcent.arr[idx(i, i, NUM_READINGS)];
+                d.arr[i] = k.arr[idx(i, i, NUM_READINGS)];
             sort(d.arr, NUM_READINGS);
 
-#if defined(NATIVE) && DEBUG
+#ifdef NATIVE
             printf("d: ");
             for (int i = NUM_READINGS - 1; i >= 0; i--)
                 printf("%f ", d.arr[i]);
@@ -169,11 +173,11 @@ PROCESS_THREAD(anomaly_process, ev, data)
                 rList[ROOT_NODE-1] = lradius;
                 children |= 1 << (ROOT_NODE - 1);
             }
-            char logbuf[50] = {0};
+            char logbuf[64] = {0};
             int length = 0;
             length += sprintf(logbuf + length, "L ");
             for (int i = 0; i < NUM_READINGS; i++)
-                if (kcent.arr[idx(i, i, NUM_READINGS)] > lradius) {
+                if (k.arr[idx(i, i, NUM_READINGS)] > lradius) {
                     length += sprintf(logbuf + length, "%d ", readings[i].epoch);
                 }
             length += sprintf(logbuf + length, "\n");
@@ -228,14 +232,15 @@ PROCESS_THREAD(anomaly_process, ev, data)
                 a.u8[1] = 0;
                 runicast_send(&ruc, &a, RXMITS);
             }
-            char logbuf[50] = {0};
+            char logbuf[120] = {0};
             int length = 0;
             length += sprintf(logbuf + length, "G ");
             for (int i = 0; i < NUM_READINGS; i++)
-                if (kcent.arr[idx(i, i, NUM_READINGS)] > gradius) {
+                if (k.arr[idx(i, i, NUM_READINGS)] > gradius) {
                     length += sprintf(logbuf + length, "%d ", readings[i].epoch);
                 }
             length += sprintf(logbuf + length, "\n");
+            cfs_write(logfile, logbuf, strlen(logbuf));
             printf(logbuf);
         }
 #endif
