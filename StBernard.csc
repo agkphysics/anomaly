@@ -6,6 +6,7 @@
   <project EXPORT="discard">[APPS_DIR]/serial_socket</project>
   <project EXPORT="discard">[APPS_DIR]/collect-view</project>
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
+  <project EXPORT="discard">[APPS_DIR]/gdbstub</project>
   <simulation>
     <title>StBernard</title>
     <randomseed>123456</randomseed>
@@ -136,7 +137,7 @@
   <plugin>
     org.contikios.cooja.plugins.SimControl
     <width>280</width>
-    <z>0</z>
+    <z>2</z>
     <height>160</height>
     <location_x>400</location_x>
     <location_y>0</location_y>
@@ -152,7 +153,7 @@
       <viewport>1.1780728634661217 0.0 0.0 1.1780728634661217 154.75076608784474 166.99182839632277</viewport>
     </plugin_config>
     <width>400</width>
-    <z>2</z>
+    <z>3</z>
     <height>400</height>
     <location_x>1</location_x>
     <location_y>1</location_y>
@@ -165,7 +166,7 @@
       <coloring />
     </plugin_config>
     <width>1320</width>
-    <z>3</z>
+    <z>1</z>
     <height>240</height>
     <location_x>400</location_x>
     <location_y>160</location_y>
@@ -207,7 +208,7 @@
  * simulation with data files added to each filesystem.
  */
 
-TIMEOUT(1200000, finish());
+TIMEOUT(900000, finish());
 coords = [[66.2, 51.6, 16.6], [-48.8, -70.4, -24.4], [-6.8, -128.4, 7.6], [6.2, 8.6, -5.4], [-16.8, 138.6, 5.6]];
 
 motes = mote.getSimulation().getMotes();
@@ -237,7 +238,7 @@ finish = function() {
       <active>true</active>
     </plugin_config>
     <width>600</width>
-    <z>1</z>
+    <z>0</z>
     <height>700</height>
     <location_x>959</location_x>
     <location_y>47</location_y>

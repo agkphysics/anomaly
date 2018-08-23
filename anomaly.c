@@ -5,7 +5,9 @@
  */
 
 #include "contiki.h"
+#include "contiki-conf.h"
 #include "net/rime/runicast.h"
+//#include "net/mac/tsch/tsch.h"
 #include "dev/watchdog.h"
 #include "cfs/cfs.h"
 
@@ -77,6 +79,16 @@ static void timeout_ruc(struct runicast_conn *ruc, const linkaddr_t *to, uint8_t
     printf("Timedout %d to %d\n", linkaddr_node_addr.u8[0], to->u8[0]);
 }
 
+static void send(void *p)
+{
+    packetbuf_clear();
+    packetbuf_copyfrom(&lradius, sizeof(real));
+    packetbuf_set_datalen(sizeof(real));
+    runicast_send(&ruc, &rootAddr, RXMITS);
+}
+
+static struct ctimer ctimer;
+
 static struct runicast_callbacks callbacks_ruc = {recv_ruc, sent_ruc, timeout_ruc};
 #endif
 
@@ -93,6 +105,8 @@ PROCESS_THREAD(anomaly_process, ev, data)
 
 #ifdef COMMUNICATION
     isChild = !(linkaddr_node_addr.u8[0] == ROOT_NODE);
+    //if (!isChild)
+        //tsch_set_coordinator(1);
     rootAddr.u8[0] = ROOT_NODE;
     rootAddr.u8[1] = 0;
     runicast_open(&ruc, 132, &callbacks_ruc);
@@ -208,7 +222,8 @@ PROCESS_THREAD(anomaly_process, ev, data)
                 packetbuf_clear();
                 packetbuf_copyfrom(&lradius, sizeof(real));
                 packetbuf_set_datalen(sizeof(real));
-                runicast_send(&ruc, &rootAddr, RXMITS);
+                ctimer_set(&ctimer, CLOCK_SECOND*linkaddr_node_addr.u8[0]/2, send, NULL);
+                //runicast_send(&ruc, &rootAddr, RXMITS);
             }
 #endif
         }

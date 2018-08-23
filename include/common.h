@@ -13,6 +13,9 @@
 #define NUM_READINGS 20
 #define NU 0.1
 
+/* RBF width parameter */
+#define SIG 1
+
 #ifdef NATIVE
     #define NAME(name) "data/" #name
 #else
@@ -66,8 +69,5 @@ void sort(real *list, size_t n)
                 list[j] = tmp;
             }
 }
-
-/* RBF width parameter */
-#define SIG 1
 
 #endif /* COMMON_H */

@@ -6,6 +6,7 @@
   <project EXPORT="discard">[APPS_DIR]/serial_socket</project>
   <project EXPORT="discard">[APPS_DIR]/collect-view</project>
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
+  <project EXPORT="discard">[APPS_DIR]/gdbstub</project>
   <simulation>
     <title>Banana</title>
     <randomseed>123456</randomseed>
@@ -13,7 +14,7 @@
     <radiomedium>
       org.contikios.cooja.radiomediums.UDGM
       <transmitting_range>50.0</transmitting_range>
-      <interference_range>100.0</interference_range>
+      <interference_range>50.0</interference_range>
       <success_ratio_tx>1.0</success_ratio_tx>
       <success_ratio_rx>1.0</success_ratio_rx>
     </radiomedium>
@@ -100,7 +101,7 @@
   <plugin>
     org.contikios.cooja.plugins.SimControl
     <width>280</width>
-    <z>6</z>
+    <z>1</z>
     <height>160</height>
     <location_x>400</location_x>
     <location_y>0</location_y>
@@ -116,7 +117,7 @@
       <viewport>3.656087051730892 0.0 0.0 3.656087051730892 216.03185566108425 169.85376887010594</viewport>
     </plugin_config>
     <width>400</width>
-    <z>2</z>
+    <z>3</z>
     <height>400</height>
     <location_x>1</location_x>
     <location_y>1</location_y>
@@ -129,7 +130,7 @@
       <coloring />
     </plugin_config>
     <width>1320</width>
-    <z>5</z>
+    <z>2</z>
     <height>240</height>
     <location_x>400</location_x>
     <location_y>160</location_y>
@@ -142,14 +143,13 @@
       <mote>2</mote>
       <showRadioRXTX />
       <showRadioHW />
-      <showLEDs />
-      <zoomfactor>500.0</zoomfactor>
+      <zoomfactor>14394.59543962134</zoomfactor>
     </plugin_config>
     <width>1720</width>
     <z>4</z>
-    <height>166</height>
+    <height>134</height>
     <location_x>0</location_x>
-    <location_y>820</location_y>
+    <location_y>852</location_y>
   </plugin>
   <plugin>
     org.contikios.cooja.plugins.Notes
@@ -158,7 +158,7 @@
       <decorations>true</decorations>
     </plugin_config>
     <width>1040</width>
-    <z>3</z>
+    <z>5</z>
     <height>160</height>
     <location_x>680</location_x>
     <location_y>0</location_y>
@@ -171,7 +171,7 @@
  * simulation with data files added to each filesystem.
  */
 
-TIMEOUT(1200000, finish());
+TIMEOUT(600000, finish());
 
 motes = mote.getSimulation().getMotes();
 for (i = 0; i &lt; motes.length; i++) {
@@ -198,7 +198,7 @@ finish = function() {
       <active>true</active>
     </plugin_config>
     <width>600</width>
-    <z>1</z>
+    <z>0</z>
     <height>700</height>
     <location_x>759</location_x>
     <location_y>56</location_y>

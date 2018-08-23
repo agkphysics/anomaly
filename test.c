@@ -2,18 +2,25 @@
 
 #include <stdio.h>
 
+
+static struct ctimer ct;
+
+static void send(void *p)
+{
+    printf("test\n");
+    ctimer_reset(&ct);
+}
+
 PROCESS(test_process, "Test Process");
 AUTOSTART_PROCESSES(&test_process);
 PROCESS_THREAD(test_process, ev, data)
 {
     PROCESS_BEGIN();
 
-    static struct etimer et;
-    etimer_set(&et, CLOCK_SECOND);
+    ctimer_set(&ct, CLOCK_SECOND, send, NULL);
 
     while (1) {
-        PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_TIMER);
-        etimer_reset(&et);
+        PROCESS_WAIT_EVENT();
         energest_flush();
         long cpu = energest_type_time(ENERGEST_TYPE_CPU);
         long transmit = energest_type_time(ENERGEST_TYPE_TRANSMIT);

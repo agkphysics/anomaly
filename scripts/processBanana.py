@@ -30,11 +30,21 @@ node2Points = realData[400:800]
 node3Points = realData[800:1200]
 
 noise = np.random.choice(noiseAnomalies, 180, False)
-randIndices = np.random.choice(400, 180, False)
-for i in range(60):
+randIndices = np.random.choice(400, 90, False)
+print(1)
+for idx in sorted(randIndices[0:30]):
+    print(idx, 'G,NoiseW')
+print(2)
+for idx in sorted(randIndices[30:60]):
+    print(idx, 'G,NoiseW')
+print(3)
+for idx in sorted(randIndices[60:90]):
+    print(idx, 'G,NoiseW')
+
+for i in range(30):
     node1Points[randIndices[i]] = noise[i]
-    node2Points[randIndices[60+i]] = noise[60+i]
-    node3Points[randIndices[120+i]] = noise[120+i]
+    node2Points[randIndices[30+i]] = noise[30+i]
+    node3Points[randIndices[60+i]] = noise[60+i]
 
 # 460 data points each
 node1Points = node1Points[:100] + cluster1L + node1Points[100:370] + cluster1G + node1Points[370:]
