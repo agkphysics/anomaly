@@ -1,0 +1,13 @@
+#1
+26          NoiseW
+50-53       NoiseW
+51-54,56,57 NoiseW
+377         NoiseW
+55-103      ClusterO
+125-170     ClusterW
+234-237 NoiseO
+238-258     ClusterW
+297-341     ClusterO
+406-425     ClusterO
+455,468,469,474,470     NoiseO
+550-574     ClusterW

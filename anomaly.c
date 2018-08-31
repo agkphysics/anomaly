@@ -187,7 +187,7 @@ PROCESS_THREAD(anomaly_process, ev, data)
                 rList[ROOT_NODE-1] = lradius;
                 children |= 1 << (ROOT_NODE - 1);
             }
-            char logbuf[96] = {0};
+            char logbuf[120] = {0};
             int length = 0;
             length += sprintf(logbuf + length, "L ");
             for (int i = 0; i < NUM_READINGS; i++)

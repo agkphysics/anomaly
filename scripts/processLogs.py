@@ -15,7 +15,23 @@ POWER_TRANSMIT = 17.7*VOLTAGE  # mW
 POWER_LISTEN = 20.0*VOLTAGE    # mW
 
 DATASETS = ('Banana', 'HIWS', 'HITEMP', 'StBernard')
-totalEpochs = {'Banana': 460, 'HIWS': 575, 'HITEMP': 1151, 'StBernard': 719}
+EPOCHS = {'Banana': 460, 'HIWS': 575, 'HITEMP': 1151, 'StBernard': 719}
+
+def cmCalculator(d, trueD, total):
+    tp = len(trueD.intersection(d))
+    fp = len(d) - tp
+    fn = len(trueD) - tp
+    tn = total - tp - fp - fn
+    tpr = tp/(tp + fn)
+    if len(d) > 0:
+        precision = tp/(tp + fp)
+        if tp > 0:
+            F1Score = 2*precision*tpr/(precision + tpr)
+        else:
+            F1Score = 0
+    else:
+        precision = F1Score = 0
+    return (tp, fp, fn, tn, tpr, precision, F1Score)
 
 tests = pd.read_csv('logs/tests.txt', sep=' ')
 df_all = {}
@@ -33,22 +49,16 @@ for dataset in DATASETS:
                     ranges[i] = {}
                 continue
             nums, tp = line.split()
-            tp = tp.split(',')
-            if len(tp) == 2:
-                tp2, tp = tp
-            else:
-                tp2 = None
-                tp = tp[0]
             nums = nums.split(',')
             for num in nums:
                 if '-' in num:
                     a, b = num.split('-')
                     a = int(a)
                     b = int(b)
-                    ranges[i][(a, b)] = (tp2, tp)
+                    ranges[i][(a, b)] = tp
                 else:
                     a = int(num)
-                    ranges[i][(a,)] = (tp2, tp)
+                    ranges[i][(a,)] = tp
 
     filenames = [f for f in glob(f'logs/{dataset}/**', recursive=True)
                  if os.path.basename(f).isnumeric()]
@@ -86,61 +96,33 @@ for dataset in DATASETS:
             print('Global Anomalies', file=g)
             print(' '.join(G), file=g)
 
-            trueL = set()
-            trueG = set()
+            trueAnomalies = set()
             for k in ranges[ID]:
                 if len(k) == 2:
                     nums = range(k[0], k[1]+1)
                 else:
                     nums = [k[0]]
-                if ranges[ID][k][0] != 'G':
-                    trueL.update(nums)
-                if ranges[ID][k][0] != 'L':
-                    trueG.update(nums)
+                trueAnomalies.update(nums)
 
             L = list(map(int, L))
             G = list(map(int, G))
+            U = set(L).union(set(G))
+            In = set(L).intersection(set(G))
 
             splits = filename.split(os.path.sep)
             testID = int(splits[-2][4:])
             testType = splits[-3]
             row = [testID, testType, ID]
-            if len(L) > 0 and len(trueL) > 0:
-                Ltp = len(trueL.intersection(L))
-                Lcm = [[Ltp, len(L) - Ltp],
-                       [len(trueL) - Ltp, totalEpochs[dataset] + Ltp - len(L) - len(trueL)]]
-                Ltpr = Lcm[0][0]/len(trueL)
-                Ltnr = Lcm[0][0]/(totalEpochs[dataset] - len(trueL))
-                Lprecision = Lcm[0][0]/len(L)
-                LBMscore = Ltpr + Ltnr - 1
-                print("Local Anomaly Confusion Matrix:", file=m)
-                print("{}, {}\n{}, {}".format(Lcm[0][0], Lcm[0][1], Lcm[1][0], Lcm[1][1]), file=m)
-                print(file=m)
-                print("{:>7s}{:>12s}{:>12s}".format('TPR', 'Precision', 'BM Score'), file=m)
-                print("{:7.2f}{:12.2f}{:12.2f}".format(Ltpr*100, Lprecision*100, LBMscore), file=m)
-                print(file=m)
-                row.extend([Lcm[0][0], Lcm[0][1], Lcm[1][0], Lcm[1][1], Ltpr, Lprecision, LBMscore])
-            else:
-                row.extend([None]*7)
-            if len(G) > 0 and len(trueG) > 0:
-                Gtp = len(trueG.intersection(G))
-                Gcm = [[Gtp, len(G) - Gtp],
-                       [len(trueG) - Gtp, totalEpochs[dataset] + Gtp - len(G) - len(trueG)]]
-                Gtpr = Gcm[0][0]/len(trueG)
-                Gtnr = Gcm[0][0]/(totalEpochs[dataset] - len(trueL))
-                Gprecision = Gcm[0][0]/len(G)
-                GBMscore = Gtpr + Gtnr - 1
-                print("Global Anomaly Confusion Matrix:", file=m)
-                print("{}, {}\n{}, {}".format(Gcm[0][0], Gcm[0][1], Gcm[1][0], Gcm[1][1]), file=m)
-                print(file=m)
-                print("{:>7s}{:>12s}{:>12s}".format('TPR', 'Precision', 'BM Score'), file=m)
-                print("{:7.2f}{:12.2f}{:12.2f}".format(Gtpr*100, Gprecision*100, GBMscore), file=m)
-                row.extend([Gcm[0][0], Gcm[0][1], Gcm[1][0], Gcm[1][1], Gtpr, Gprecision, GBMscore])
-            else:
-                row.extend([None]*7)
+            row.extend(cmCalculator(L, trueAnomalies, EPOCHS[dataset]))
+            row.extend(cmCalculator(G, trueAnomalies, EPOCHS[dataset]))
+            row.extend(cmCalculator(U, trueAnomalies, EPOCHS[dataset]))
+            row.extend(cmCalculator(In, trueAnomalies, EPOCHS[dataset]))
             rows.append(row)
-    df = pd.DataFrame(rows, columns=('TestID', 'Test', 'NodeID', 'LTP', 'LFP', 'LFN', 'LTN', 'Ltpr', 'Lprec', 'LBM',
-                                     'GTP', 'GFP', 'GFN', 'GTN', 'Gtpr', 'Gprec', 'GBM'))
+    df = pd.DataFrame(rows, columns=('TestID', 'Test', 'NodeID',
+                                     'LTP', 'LFP', 'LFN', 'LTN', 'Ltpr', 'Lprec', 'LF1Score',
+                                     'GTP', 'GFP', 'GFN', 'GTN', 'Gtpr', 'Gprec', 'GF1Score',
+                                     'UTP', 'UFP', 'UFN', 'UTN', 'Utpr', 'Uprec', 'UF1Score',
+                                     'ITP', 'IFP', 'IFN', 'ITN', 'Itpr', 'Iprec', 'IF1Score'))
     df = df.astype({'TestID': int})
     df = pd.merge(tests, df, on='TestID')
     df = df.set_index('TestID')
@@ -150,4 +132,13 @@ for dataset in DATASETS:
     df_all[dataset] = df
 df = pd.concat(df_all, join='inner', names=['Dataset'])
 df = df.reset_index()
-df.to_excel(f'logs/all.xlsx', 'Data')
+df.to_excel('logs/all.xlsx', 'Data')
+
+df.where(df['Normalised']) \
+    .groupby(['Dataset', 'n', 'nu', 'sigma', 'Test']) \
+    .median() \
+    .reindex(columns=('Ltpr', 'Lprec', 'LF1Score',
+                      'Gtpr', 'Gprec', 'GF1Score',
+                      'Utpr', 'Uprec', 'UF1Score',
+                      'Itpr', 'Iprec', 'IF1Score')) \
+    .to_excel('logs/summary.xlsx', 'Data')

@@ -1,7 +1,10 @@
-obj_*/
-data/
-logs/
+/obj_*/*
+/data/*
+!/data/truth/
+/logs/*
+!/logs/tests.txt
 .vscode/
+
 *.map
 *.a
 symbols.c

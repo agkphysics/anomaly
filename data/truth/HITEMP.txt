@@ -1,0 +1,99 @@
+#1
+1-75        ClusterO
+190-240     ClusterO
+319         NoiseW
+357         NoiseW
+365         NoiseW
+497         NoiseW
+850-972     ClusterO
+1050-1123   ClusterO
+
+#2
+1-75        ClusterO
+190-240     ClusterO
+319         NoiseW
+357         NoiseW
+365         NoiseW
+497         NoiseW
+850-972     ClusterO
+1050-1123   ClusterO
+
+#3
+1-75        ClusterO
+190-240     ClusterO
+319         NoiseW
+357         NoiseW
+365         NoiseW
+497         NoiseW
+850-972     ClusterO
+1050-1123   ClusterO
+
+#4
+1-75        ClusterO
+190-240     ClusterO
+319         NoiseW
+357         NoiseW
+365         NoiseW
+497         NoiseW
+850-972     ClusterO
+1050-1123   ClusterO
+
+#5
+1-75        ClusterO
+190-240     ClusterO
+319         NoiseW
+357         NoiseW
+365         NoiseW
+497         NoiseW
+850-972     ClusterO
+1050-1123   ClusterO
+
+#6
+1-75        ClusterO
+190-240     ClusterO
+319         NoiseW
+357         NoiseW
+365         NoiseW
+497         NoiseW
+850-972     ClusterO
+1050-1123   ClusterO
+
+#7
+1-75        ClusterO
+190-240     ClusterO
+319         NoiseW
+357         NoiseW
+365         NoiseW
+497         NoiseW
+850-972     ClusterO
+1050-1123   ClusterO
+
+#8
+1-75        ClusterO
+190-240     ClusterO
+319         NoiseW
+357         NoiseW
+365         NoiseW
+497         NoiseW
+850-972     ClusterO
+1050-1123   ClusterO
+
+#9
+1-75        ClusterO
+190-240     ClusterO
+319         NoiseW
+357         NoiseW
+365         NoiseW
+497         NoiseW
+850-972     ClusterO
+1050-1123   ClusterO
+
+#10
+1-75        ClusterO
+190-240     ClusterO
+319         NoiseW
+357         NoiseW
+365         NoiseW
+497         NoiseW
+850-972     ClusterO
+1050-1123   ClusterO
