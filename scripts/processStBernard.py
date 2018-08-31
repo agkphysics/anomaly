@@ -4,6 +4,7 @@
 
 import pandas as pd
 import os.path
+import sys
 
 filepath = '~/Documents/Windows/Uni Stuff/2018/Dissertation/Datasets/stbernard/cluster/'
 _filepath = '~/Documents/Windows/Uni Stuff/2018/Dissertation/Datasets/stbernard/cluster/stbernard-meteo-25.txt'
@@ -44,6 +45,15 @@ for oID, ID in idMap.items():
     df = df.loc['2007-09-30']
     df.index = list(range(df.index.size))
     df.index.name = 'Epoch'
+
+    if len(sys.argv) > 1 and sys.argv[1] == 'normalise':
+        for col in df.columns:
+            mx = max(df.loc[:, col])
+            mn = min(df.loc[:, col])
+            if mx == mn:
+                df.loc[:, col] = 0
+            else:
+                df.loc[:, col] = (df.loc[:, col] - mn)/(mx - mn)
 
     # Convert to ints
     df *= 1000

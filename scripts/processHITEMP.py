@@ -3,6 +3,7 @@
 # Author: Aaron Keesing
 
 import pandas as pd
+import sys
 
 filepath = '~/Dropbox/Dissertation/data/Heron_Island_Data.csv'
 
@@ -26,15 +27,16 @@ df.index = list(range(df.index.size))
 df.index.name = 'Epoch'
 df = df.interpolate()
 
+if len(sys.argv) > 1 and sys.argv[1] == 'normalise':
+    mx = max(df.max(0))
+    mn = min(df.min(0))
+    df = (df - mn)/(mx - mn)
+    # for col in df.columns:
+    #     df.loc[:, col] = (df.loc[:, col] - mn)/(mx - mn)
+
 # Convert to ints
 df *= 1000
 df = df.astype(int)
-
-import matplotlib.pyplot as plt
-
-plt.figure()
-df.plot(legend=False, grid=True, xticks=range(0, 1151, 50), linewidth=0.5)
-plt.show()
 
 for i, node in enumerate(df.columns):
     df.loc[:, node].to_csv(f'./data/HITEMP_{i+1}',

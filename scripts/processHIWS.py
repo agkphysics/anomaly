@@ -3,6 +3,7 @@
 # Author: Aaron Keesing
 
 import pandas as pd
+import sys
 
 filepath = '~/Documents/Windows/Uni Stuff/2018/Dissertation/Datasets/Heron_Island_Data.csv'
 
@@ -23,13 +24,20 @@ df.columns = df.columns.get_level_values('VARNAME')
 df.index = list(range(df.index.size))
 df.index.name = 'Epoch'
 
-# Convert to ints
-df.AIRT *= 10
-df.ATMP *= 10
-df.RAIN_AMOUNT *= 10
-df.RELH *= 10
-df.WDIR_10min *= 100
-df.WSPD_10min *= 100
+if len(sys.argv) > 1 and sys.argv[1] == 'normalise':
+    for col in df.columns:
+        mx = max(df.loc[:, col])
+        mn = min(df.loc[:, col])
+        df.loc[:, col] = (df.loc[:, col] - mn)/(mx - mn)
+    df *= 1000
+else:
+    df.AIRT *= 10
+    df.ATMP *= 10
+    df.RAIN_AMOUNT *= 10
+    df.RELH *= 10
+    df.WDIR_10min *= 100
+    df.WSPD_10min *= 100
+
 df = df.astype(int)
 
 df.to_csv(f'./data/HIWS', sep=' ', header=False, index=True)

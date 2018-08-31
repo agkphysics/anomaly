@@ -126,7 +126,7 @@
  * simulation with data files added to the filesystem.
  */
 
-TIMEOUT(1200000, finish());
+TIMEOUT(900000, finish());
 
 fs = mote.getInterfaces().get("Filesystem");
 if (fs.insertFile("/home/aaron/src/anomaly/data/HIWS"))
@@ -147,4 +147,3 @@ finish = function() {
     <location_y>221</location_y>
   </plugin>
 </simconf>
-

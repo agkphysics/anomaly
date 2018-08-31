@@ -1,6 +1,7 @@
 ifeq ($(DATASET),)
 $(error Error: DATASET must be set)
 endif
+
 CONTIKI_PROJECT = anomaly test
 all: init $(CONTIKI_PROJECT)
 init:
@@ -17,5 +18,4 @@ endif
 
 CONTIKI = ../contiki
 CONTIKI_WITH_RIME = 1
-#MODULES += core/net/mac/tsch
 include $(CONTIKI)/Makefile.include

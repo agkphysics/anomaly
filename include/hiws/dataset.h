@@ -15,7 +15,8 @@
 #define ROOT_NODE 1
 #define NUM_SENSORS 1
 
-const real scaling[VAL_LEN] = {10, 10, 10, 10, 100, 100};
+//const real scaling[VAL_LEN] = {10, 10, 10, 10, 100, 100};
+const real scaling[VAL_LEN] = {1000, 1000, 1000, 1000, 1000, 1000};
 
 void getName(char *name)
 {

@@ -47,6 +47,9 @@ for i in range(30):
     node3Points[randIndices[60+i]] = noise[60+i]
 
 # 460 data points each
+# A cluster of 30 for each node by itself
+# A cluster of 30 for all nodes at the same time
+# 30 `noise' data points randomly interspersed
 node1Points = node1Points[:100] + cluster1L + node1Points[100:370] + cluster1G + node1Points[370:]
 node2Points = node2Points[:200] + cluster1L + node2Points[200:370] + cluster1G + node2Points[370:]
 node3Points = node3Points[:300] + cluster1L + node3Points[300:370] + cluster1G + node3Points[370:]
