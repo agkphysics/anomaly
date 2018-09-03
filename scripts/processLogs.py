@@ -6,6 +6,7 @@
 import os.path
 from glob import glob
 import pandas as pd
+import numpy as np
 
 TICKS_PER_SECOND = 4096
 VOLTAGE = 3
@@ -14,21 +15,24 @@ POWER_LPM = 0.0545*VOLTAGE     # mW
 POWER_TRANSMIT = 17.7*VOLTAGE  # mW
 POWER_LISTEN = 20.0*VOLTAGE    # mW
 
-DATASETS = ('Banana', 'HIWS', 'HITEMP', 'StBernard')
-EPOCHS = {'Banana': 460, 'HIWS': 575, 'HITEMP': 1151, 'StBernard': 719}
+DATASETS = ('Banana', 'Banana2', 'HIWS', 'HITEMP', 'StBernard')
+EPOCHS = {'Banana': 460, 'Banana2': 500, 'HIWS': 575, 'HITEMP': 1151, 'StBernard': 719}
 
 def cmCalculator(d, trueD, total):
     tp = len(trueD.intersection(d))
     fp = len(d) - tp
     fn = len(trueD) - tp
     tn = total - tp - fp - fn
-    tpr = tp/(tp + fn)
+    if len(trueD) > 0:
+        tpr = tp/(tp + fn)
+    else:
+        tpr = 0
     if len(d) > 0:
-        precision = tp/(tp + fp)
         if tp > 0:
+            precision = tp/(tp + fp)
             F1Score = 2*precision*tpr/(precision + tpr)
         else:
-            F1Score = 0
+            precision = F1Score = 0
     else:
         precision = F1Score = 0
     return (tp, fp, fn, tn, tpr, precision, F1Score)
@@ -65,7 +69,7 @@ for dataset in DATASETS:
     rows = []
     for filename in filenames:
         ID = int(os.path.basename(filename))
-        with open(filename) as f, open(filename + '_processed', 'w') as g, open(filename + '_metrics', 'w') as m:
+        with open(filename) as f, open(filename + '_processed', 'w') as g:
             powerMetrics = []
             L = []
             G = []
@@ -96,33 +100,50 @@ for dataset in DATASETS:
             print('Global Anomalies', file=g)
             print(' '.join(G), file=g)
 
-            trueAnomalies = set()
+            powerMetrics = np.array(powerMetrics)
+            meanPower = powerMetrics.mean(0)
+            meanPower = meanPower[1:]  # ignore clock
+
+            anomalies = dict((x, set()) for x in ['all', 'Noise', 'LocalCluster', 'Environment'])
             for k in ranges[ID]:
                 if len(k) == 2:
                     nums = range(k[0], k[1]+1)
                 else:
                     nums = [k[0]]
-                trueAnomalies.update(nums)
+                anomalies[ranges[ID][k]].update(nums)
+                anomalies['all'].update(nums)
 
             L = list(map(int, L))
             G = list(map(int, G))
             U = set(L).union(set(G))
             In = set(L).intersection(set(G))
+            if dataset == 'HIWS':
+                In = set(L)
 
             splits = filename.split(os.path.sep)
             testID = int(splits[-2][4:])
             testType = splits[-3]
             row = [testID, testType, ID]
-            row.extend(cmCalculator(L, trueAnomalies, EPOCHS[dataset]))
-            row.extend(cmCalculator(G, trueAnomalies, EPOCHS[dataset]))
-            row.extend(cmCalculator(U, trueAnomalies, EPOCHS[dataset]))
-            row.extend(cmCalculator(In, trueAnomalies, EPOCHS[dataset]))
+
+            row.extend(cmCalculator(L, anomalies['all'], EPOCHS[dataset]))
+            row.extend(cmCalculator(G, anomalies['all'], EPOCHS[dataset]))
+            row.extend(cmCalculator(U, anomalies['all'], EPOCHS[dataset]))
+            row.extend(cmCalculator(In, anomalies['all'], EPOCHS[dataset]))
+
+            row.extend(cmCalculator(In, anomalies['Noise'], EPOCHS[dataset]))
+            row.extend(cmCalculator(In, anomalies['LocalCluster'], EPOCHS[dataset]))
+            row.extend(cmCalculator(In, anomalies['Environment'], EPOCHS[dataset]))
+            row.extend(meanPower)
             rows.append(row)
     df = pd.DataFrame(rows, columns=('TestID', 'Test', 'NodeID',
                                      'LTP', 'LFP', 'LFN', 'LTN', 'Ltpr', 'Lprec', 'LF1Score',
                                      'GTP', 'GFP', 'GFN', 'GTN', 'Gtpr', 'Gprec', 'GF1Score',
                                      'UTP', 'UFP', 'UFN', 'UTN', 'Utpr', 'Uprec', 'UF1Score',
-                                     'ITP', 'IFP', 'IFN', 'ITN', 'Itpr', 'Iprec', 'IF1Score'))
+                                     'ITP', 'IFP', 'IFN', 'ITN', 'Itpr', 'Iprec', 'IF1Score',
+                                     'NTP', 'NFP', 'NFN', 'NTN', 'Ntpr', 'Nprec', 'NF1Score',
+                                     'LCTP', 'LCFP', 'LCFN', 'LCTN', 'LCtpr', 'LCprec', 'LCF1Score',
+                                     'ETP', 'EFP', 'EFN', 'ETN', 'Etpr', 'Eprec', 'EF1Score',
+                                     'CPU', 'LPM', 'Tx', 'Listen'))
     df = df.astype({'TestID': int})
     df = pd.merge(tests, df, on='TestID')
     df = df.set_index('TestID')
@@ -134,11 +155,11 @@ df = pd.concat(df_all, join='inner', names=['Dataset'])
 df = df.reset_index()
 df.to_excel('logs/all.xlsx', 'Data')
 
-df.where(df['Normalised']) \
+df.where(df['Normalised'] == 1) \
     .groupby(['Dataset', 'n', 'nu', 'sigma', 'Test']) \
     .median() \
-    .reindex(columns=('Ltpr', 'Lprec', 'LF1Score',
-                      'Gtpr', 'Gprec', 'GF1Score',
-                      'Utpr', 'Uprec', 'UF1Score',
-                      'Itpr', 'Iprec', 'IF1Score')) \
+    .reindex(columns=('Itpr', 'Iprec', 'IF1Score',
+                      'Ntpr', 'Nprec', 'NF1Score',
+                      'LCtpr', 'LCprec', 'LCF1Score',
+                      'Etpr', 'Eprec', 'EF1Score')) \
     .to_excel('logs/summary.xlsx', 'Data')

@@ -1,99 +1,99 @@
 #1
-1-75        ClusterO
-190-240     ClusterO
-319         NoiseW
-357         NoiseW
-365         NoiseW
-497         NoiseW
-850-972     ClusterO
-1050-1123   ClusterO
+1-75        Environment
+190-240     Environment
+319         Noise
+357         Noise
+365         Noise
+497         Noise
+850-972     Environment
+1050-1123   Environment
 
 #2
-1-75        ClusterO
-190-240     ClusterO
-319         NoiseW
-357         NoiseW
-365         NoiseW
-497         NoiseW
-850-972     ClusterO
-1050-1123   ClusterO
+1-75        Environment
+190-240     Environment
+319         Noise
+357         Noise
+365         Noise
+497         Noise
+850-972     Environment
+1050-1123   Environment
 
 #3
-1-75        ClusterO
-190-240     ClusterO
-319         NoiseW
-357         NoiseW
-365         NoiseW
-497         NoiseW
-850-972     ClusterO
-1050-1123   ClusterO
+1-75        Environment
+190-240     Environment
+319         Noise
+357         Noise
+365         Noise
+497         Noise
+850-972     Environment
+1050-1123   Environment
 
 #4
-1-75        ClusterO
-190-240     ClusterO
-319         NoiseW
-357         NoiseW
-365         NoiseW
-497         NoiseW
-850-972     ClusterO
-1050-1123   ClusterO
+1-75        Environment
+190-240     Environment
+319         Noise
+357         Noise
+365         Noise
+497         Noise
+850-972     Environment
+1050-1123   Environment
 
 #5
-1-75        ClusterO
-190-240     ClusterO
-319         NoiseW
-357         NoiseW
-365         NoiseW
-497         NoiseW
-850-972     ClusterO
-1050-1123   ClusterO
+1-75        Environment
+190-240     Environment
+319         Noise
+357         Noise
+365         Noise
+497         Noise
+850-972     Environment
+1050-1123   Environment
 
 #6
-1-75        ClusterO
-190-240     ClusterO
-319         NoiseW
-357         NoiseW
-365         NoiseW
-497         NoiseW
-850-972     ClusterO
-1050-1123   ClusterO
+1-75        Environment
+190-240     Environment
+319         Noise
+357         Noise
+365         Noise
+497         Noise
+850-972     Environment
+1050-1123   Environment
 
 #7
-1-75        ClusterO
-190-240     ClusterO
-319         NoiseW
-357         NoiseW
-365         NoiseW
-497         NoiseW
-850-972     ClusterO
-1050-1123   ClusterO
+1-75        Environment
+190-240     Environment
+319         Noise
+357         Noise
+365         Noise
+497         Noise
+850-972     Environment
+1050-1123   Environment
 
 #8
-1-75        ClusterO
-190-240     ClusterO
-319         NoiseW
-357         NoiseW
-365         NoiseW
-497         NoiseW
-850-972     ClusterO
-1050-1123   ClusterO
+1-75        Environment
+190-240     Environment
+319         Noise
+357         Noise
+365         Noise
+497         Noise
+850-972     Environment
+1050-1123   Environment
 
 #9
-1-75        ClusterO
-190-240     ClusterO
-319         NoiseW
-357         NoiseW
-365         NoiseW
-497         NoiseW
-850-972     ClusterO
-1050-1123   ClusterO
+1-75        Environment
+190-240     Environment
+319         Noise
+357         Noise
+365         Noise
+497         Noise
+850-972     Environment
+1050-1123   Environment
 
 #10
-1-75        ClusterO
-190-240     ClusterO
-319         NoiseW
-357         NoiseW
-365         NoiseW
-497         NoiseW
-850-972     ClusterO
-1050-1123   ClusterO
+1-75        Environment
+190-240     Environment
+319         Noise
+357         Noise
+365         Noise
+497         Noise
+850-972     Environment
+1050-1123   Environment

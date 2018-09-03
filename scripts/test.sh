@@ -21,7 +21,7 @@ then
     exit 1
 elif [ "$DATASETS" = "all" ]
 then
-    $DATASETS="HIWS HITEMP Banana StBernard"
+    DATASETS="HIWS HITEMP Banana Banana2 StBernard"
 fi
 
 cd $CONTIKI_DIR/tools/cooja
@@ -29,6 +29,6 @@ cd $CONTIKI_DIR/tools/cooja
 for DATASET in $DATASETS
 do
     ant run_nogui -Dargs=$HOME/src/anomaly/$DATASET.csc
-    mkdir -v $HOME/src/anomaly/logs/$DATASET/$TEST/Test$TEST_NO
+    mkdir -v -p $HOME/src/anomaly/logs/$DATASET/$TEST/Test$TEST_NO
     mv -v $HOME/src/anomaly/logs/$DATASET/[0-9]* $HOME/src/anomaly/logs/$DATASET/$TEST/Test$TEST_NO
 done

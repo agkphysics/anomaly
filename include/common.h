@@ -10,11 +10,11 @@
 #include <math.h>
 
 #define BUF_LEN 60
-#define NUM_READINGS 20
-#define NU 0.4
+#define NUM_READINGS 30
+#define NU 0.3
 
 /* RBF width parameter */
-#define SIG 0.01
+#define SIG 1.0
 
 #ifdef NATIVE
     #define NAME(name) "data/" #name

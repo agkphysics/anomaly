@@ -27,6 +27,7 @@ static real lradius, gradius;
 static real rList[NUM_SENSORS];
 static int children;
 static unsigned char isChild, isValid;
+static long lastCPU, lastTransmit, lastLPM, lastListen, lastClockTime;
 
 static const process_event_t EVENT_RAD = 1;
 static struct etimer periodTimer;
@@ -134,6 +135,8 @@ PROCESS_THREAD(anomaly_process, ev, data)
     static size_t length = 0;
     static int bytes;
     static int epoch = 0; // For debug purposes
+    static int r = 0;
+    lastCPU = lastTransmit = lastLPM = lastListen = lastClockTime = 0;
 #ifdef NATIVE
     etimer_set(&periodTimer, CLOCK_SECOND/2);
 #else
@@ -148,31 +151,30 @@ PROCESS_THREAD(anomaly_process, ev, data)
             isValid = 1;
             etimer_reset(&periodTimer);
             watchdog_stop();
-            for (int i = 0; i < NUM_READINGS && (bytes = cfs_read(fp, buf + length, BUF_LEN - length)) > 0; epoch++, i++) {
-                char *p = getNextReading(buf, &readings[i]);
+
+            for (r = 0; r < NUM_READINGS && (bytes = cfs_read(fp, buf + length, BUF_LEN - length)) > 0; epoch++, r++) {
+                char *p = getNextReading(buf, &readings[r]);
                 //printReading(&readings[i]);
                 p += strlen(p) + 1; // p now points to beginning of next line
                 length = buf + BUF_LEN - p;
                 memmove(buf, p, length); // memcpy() has undefined behaviour in this case
             }
-            if (bytes <= 0)
-                break;
 
-            for (int i = 0; i < NUM_READINGS; i++) {
+            for (int i = 0; i < r; i++) {
                 float vals1[VAL_LEN];
                 getVector(&readings[i], vals1);
-                for(int j = i; j < NUM_READINGS; j++) {
+                for(int j = i; j < r; j++) {
                     float vals2[VAL_LEN];
                     getVector(&readings[j], vals2);
                     k.arr[idx(i, j, NUM_READINGS)] = k.arr[idx(j, i, NUM_READINGS)] = rbf(vals1, vals2, VAL_LEN);
                 }
             }
-            centMat(&k);
+            centMat(&k, r);
 
             /* Retain only the centred d(xi, xi) values, and sort */
-            for (int i = 0; i < NUM_READINGS; i++)
+            for (int i = 0; i < r; i++)
                 d.arr[i] = k.arr[idx(i, i, NUM_READINGS)];
-            sort(d.arr, NUM_READINGS);
+            sort(d.arr, r);
 
 #ifdef NATIVE
             printf("d: ");
@@ -182,7 +184,7 @@ PROCESS_THREAD(anomaly_process, ev, data)
 #endif
 
             int j = (int)floorf(NU*NUM_READINGS);
-            lradius = d.arr[NUM_READINGS - 1 - j];
+            lradius = d.arr[r - 1 - j];
             if (linkaddr_node_addr.u8[0] == ROOT_NODE) {
                 rList[ROOT_NODE-1] = lradius;
                 children |= 1 << (ROOT_NODE - 1);
@@ -190,14 +192,12 @@ PROCESS_THREAD(anomaly_process, ev, data)
             char logbuf[120] = {0};
             int length = 0;
             length += sprintf(logbuf + length, "L ");
-            for (int i = 0; i < NUM_READINGS; i++)
+            for (int i = 0; i < r; i++)
                 if (k.arr[idx(i, i, NUM_READINGS)] > lradius) {
                     length += sprintf(logbuf + length, "%d ", readings[i].epoch);
                 }
             length += sprintf(logbuf + length, "\n");
 
-            static long lastCPU, lastTransmit, lastLPM, lastListen, lastClockTime;
-            lastCPU = lastTransmit = lastLPM = lastListen = lastClockTime = 0;
             long cpu, transmit, lpm, listen, clockTime;
 
             energest_flush();
@@ -250,13 +250,15 @@ PROCESS_THREAD(anomaly_process, ev, data)
             char logbuf[160] = {0};
             int length = 0;
             length += sprintf(logbuf + length, "G ");
-            for (int i = 0; i < NUM_READINGS; i++)
+            for (int i = 0; i < r; i++)
                 if (k.arr[idx(i, i, NUM_READINGS)] > gradius) {
                     length += sprintf(logbuf + length, "%d ", readings[i].epoch);
                 }
             length += sprintf(logbuf + length, "\n");
             cfs_write(logfile, logbuf, strlen(logbuf));
             printf(logbuf);
+            if (r < NUM_READINGS)
+                break;
         }
 #endif
     }

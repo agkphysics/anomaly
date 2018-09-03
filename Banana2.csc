@@ -25,7 +25,7 @@
       <identifier>z11</identifier>
       <description>Sensor Node</description>
       <source EXPORT="discard">[CONFIG_DIR]/anomaly.c</source>
-      <commands EXPORT="discard">make TARGET=z1 DATASET=banana</commands>
+      <commands EXPORT="discard">make TARGET=z1 DATASET=banana2</commands>
       <firmware EXPORT="copy">[CONFIG_DIR]/anomaly.z1</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
@@ -46,8 +46,8 @@
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>-26.70391986833647</x>
-        <y>26.789906734721644</y>
+        <x>-10.019415605474094</x>
+        <y>30.892653684605833</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -64,8 +64,8 @@
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>13.995329874514697</x>
-        <y>5.127402839333117</y>
+        <x>8.798517071328055</x>
+        <y>10.871248569170984</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -82,8 +82,8 @@
       <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>-7.125583948341402</x>
-        <y>-8.047578673338371</y>
+        <x>-20.801407114622034</x>
+        <y>-10.235710379943272</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
@@ -100,7 +100,7 @@
   <plugin>
     org.contikios.cooja.plugins.SimControl
     <width>280</width>
-    <z>1</z>
+    <z>3</z>
     <height>160</height>
     <location_x>400</location_x>
     <location_y>0</location_y>
@@ -113,10 +113,10 @@
       <skin>org.contikios.cooja.plugins.skins.GridVisualizerSkin</skin>
       <skin>org.contikios.cooja.plugins.skins.TrafficVisualizerSkin</skin>
       <skin>org.contikios.cooja.plugins.skins.UDGMVisualizerSkin</skin>
-      <viewport>3.656087051730892 0.0 0.0 3.656087051730892 216.03185566108425 169.85376887010594</viewport>
+      <viewport>3.656087051730892 0.0 0.0 3.656087051730892 208.03185566108425 156.85376887010594</viewport>
     </plugin_config>
     <width>400</width>
-    <z>3</z>
+    <z>0</z>
     <height>400</height>
     <location_x>1</location_x>
     <location_y>1</location_y>
@@ -129,7 +129,7 @@
       <coloring />
     </plugin_config>
     <width>1320</width>
-    <z>2</z>
+    <z>4</z>
     <height>240</height>
     <location_x>400</location_x>
     <location_y>160</location_y>
@@ -145,7 +145,7 @@
       <zoomfactor>14394.59543962134</zoomfactor>
     </plugin_config>
     <width>1720</width>
-    <z>4</z>
+    <z>5</z>
     <height>134</height>
     <location_x>0</location_x>
     <location_y>852</location_y>
@@ -153,11 +153,11 @@
   <plugin>
     org.contikios.cooja.plugins.Notes
     <plugin_config>
-      <notes>Simulation for the banana dataset.</notes>
+      <notes>Simulation for the Banana2 dataset.</notes>
       <decorations>true</decorations>
     </plugin_config>
     <width>1040</width>
-    <z>5</z>
+    <z>2</z>
     <height>160</height>
     <location_x>680</location_x>
     <location_y>0</location_y>
@@ -179,7 +179,7 @@ for (i = 0; i &lt; motes.length; i++) {
 
     fs = mote.getInterfaces().get("Filesystem");
     log.log(id.toString() + " ");
-    if (fs.insertFile("/home/aaron/src/anomaly/data/Banana_" + id.toString()))
+    if (fs.insertFile("/home/aaron/src/anomaly/data/Banana2_" + id.toString()))
         log.log("Succeeded\n");
     else
         log.log("Failed\n");
@@ -190,16 +190,17 @@ finish = function() {
         mote = motes[i];
         id = mote.getID();
         fs = mote.getInterfaces().get("Filesystem");
-        fs.extractFile("log", "/home/aaron/src/anomaly/logs/Banana/" + id.toString());
+        fs.extractFile("log", "/home/aaron/src/anomaly/logs/Banana2/" + id.toString());
         log.log("Extracted " + id.toString() + "\n");
     }
 }</script>
       <active>true</active>
     </plugin_config>
     <width>600</width>
-    <z>0</z>
+    <z>1</z>
     <height>700</height>
     <location_x>759</location_x>
     <location_y>56</location_y>
   </plugin>
 </simconf>
+

@@ -7,6 +7,7 @@
 #include "contiki.h"
 #include "contiki-conf.h"
 #include "net/rime/runicast.h"
+//#include "net/mac/tsch/tsch.h"
 #include "dev/watchdog.h"
 #include "cfs/cfs.h"
 
@@ -26,7 +27,6 @@ static real lradius, gradius;
 static real rList[NUM_SENSORS];
 static int children;
 static unsigned char isChild, isValid;
-static long lastCPU, lastTransmit, lastLPM, lastListen, lastClockTime;
 
 static const process_event_t EVENT_RAD = 1;
 static struct etimer periodTimer;
@@ -134,10 +134,6 @@ PROCESS_THREAD(anomaly_process, ev, data)
     static size_t length = 0;
     static int bytes;
     static int epoch = 0; // For debug purposes
-    static int period = -1;
-    static int r;
-    static int ndash = 0;
-    lastCPU = lastTransmit = lastLPM = lastListen = lastClockTime = 0;
 #ifdef NATIVE
     etimer_set(&periodTimer, CLOCK_SECOND/2);
 #else
@@ -146,68 +142,37 @@ PROCESS_THREAD(anomaly_process, ev, data)
     while (1) {
         PROCESS_WAIT_EVENT();
         if (ev == PROCESS_EVENT_TIMER) {
-            period++;
             for (int i = 0; i < NUM_SENSORS; i++)
                 rList[i] = 0;
             children = 0;
             isValid = 1;
             etimer_reset(&periodTimer);
             watchdog_stop();
-
-            char logbuf[120] = {0};
-            int length = 0;
-
-            if (period > 0) {
-                ndash = 0;
-                length += sprintf(logbuf + length, "A ");
-                for (r = 0; r < NUM_READINGS && (bytes = cfs_read(fp, buf + length, BUF_LEN - length)) > 0; epoch++, r++) {
-                    char *p = getNextReading(buf, &readings[r]);
-                    p += strlen(p) + 1;
-                    length = buf + BUF_LEN - p;
-                    memmove(buf, p, length);
-                    ndash++;
-                    real vals[VAL_LEN];
-                    getVector(&readings[r], vals);
-                    real kxx = rbf(vals, vals, VAL_LEN);
-                    real sum = 0;
-                    for (int i = 0; i < NUM_READINGS; i++) {
-                        real vals2[VAL_LEN];
-                        getVector(&readings[i], vals2);
-                        sum += rbf(vals2, vals2, VAL_LEN)/(real)NUM_READINGS - 2*rbf(vals, vals2, VAL_LEN);
-                    }
-                    sum /= (real)NUM_READINGS;
-                    real dc = sqrtf(kxx + sum);
-                    if (dc > lradius && dc > gradius) { // Outlier
-                        r = NUM_READINGS;
-                        length += sprintf(logbuf + length, "%d ", readings[r].epoch);
-                        break;
-                    }
-                }
+            for (int i = 0; i < NUM_READINGS && (bytes = cfs_read(fp, buf + length, BUF_LEN - length)) > 0; epoch++, i++) {
+                char *p = getNextReading(buf, &readings[i]);
+                //printReading(&readings[i]);
+                p += strlen(p) + 1; // p now points to beginning of next line
+                length = buf + BUF_LEN - p;
+                memmove(buf, p, length); // memcpy() has undefined behaviour in this case
             }
-            else {
-                for (r = 0; r < NUM_READINGS && (bytes = cfs_read(fp, buf + length, BUF_LEN - length)) > 0; epoch++, r++) {
-                    char *p = getNextReading(buf, &readings[r]);
-                    p += strlen(p) + 1;
-                    length = buf + BUF_LEN - p;
-                    memmove(buf, p, length);
-                }
-            }
+            if (bytes <= 0)
+                break;
 
-            for (int i = 0; i < r; i++) {
-                real vals1[VAL_LEN];
+            for (int i = 0; i < NUM_READINGS; i++) {
+                float vals1[VAL_LEN];
                 getVector(&readings[i], vals1);
-                for(int j = i; j < r; j++) {
-                    real vals2[VAL_LEN];
+                for(int j = i; j < NUM_READINGS; j++) {
+                    float vals2[VAL_LEN];
                     getVector(&readings[j], vals2);
                     k.arr[idx(i, j, NUM_READINGS)] = k.arr[idx(j, i, NUM_READINGS)] = rbf(vals1, vals2, VAL_LEN);
                 }
             }
-            centMat(&k, r);
+            centMat(&k, NUM_READINGS);
 
             /* Retain only the centred d(xi, xi) values, and sort */
-            for (int i = 0; i < r; i++)
+            for (int i = 0; i < NUM_READINGS; i++)
                 d.arr[i] = k.arr[idx(i, i, NUM_READINGS)];
-            sort(d.arr, r);
+            sort(d.arr, NUM_READINGS);
 
 #ifdef NATIVE
             printf("d: ");
@@ -217,13 +182,22 @@ PROCESS_THREAD(anomaly_process, ev, data)
 #endif
 
             int j = (int)floorf(NU*NUM_READINGS);
-            lradius = d.arr[r - 1 - j];
+            lradius = d.arr[NUM_READINGS - 1 - j];
             if (linkaddr_node_addr.u8[0] == ROOT_NODE) {
                 rList[ROOT_NODE-1] = lradius;
                 children |= 1 << (ROOT_NODE - 1);
             }
+            char logbuf[120] = {0};
+            int length = 0;
+            length += sprintf(logbuf + length, "L ");
+            for (int i = 0; i < NUM_READINGS; i++)
+                if (k.arr[idx(i, i, NUM_READINGS)] > lradius) {
+                    length += sprintf(logbuf + length, "%d ", readings[i].epoch);
+                }
             length += sprintf(logbuf + length, "\n");
 
+            static long lastCPU, lastTransmit, lastLPM, lastListen, lastClockTime;
+            lastCPU = lastTransmit = lastLPM = lastListen = lastClockTime = 0;
             long cpu, transmit, lpm, listen, clockTime;
 
             energest_flush();
@@ -249,6 +223,7 @@ PROCESS_THREAD(anomaly_process, ev, data)
                 packetbuf_copyfrom(&lradius, sizeof(real));
                 packetbuf_set_datalen(sizeof(real));
                 ctimer_set(&ctimer, CLOCK_SECOND*linkaddr_node_addr.u8[0]/2, send, NULL);
+                //runicast_send(&ruc, &rootAddr, RXMITS);
             }
 #endif
         }
@@ -262,10 +237,7 @@ PROCESS_THREAD(anomaly_process, ev, data)
 
                 // Aggregate radii via median
                 sort(rList, NUM_SENSORS);
-                if (NUM_SENSORS % 2 != 0)
-                    gradius = rList[NUM_SENSORS/2];
-                else
-                    gradius = (rList[NUM_SENSORS/2] + rList[NUM_SENSORS/2-1])/2;
+                gradius = rList[NUM_SENSORS / 2];
                 printf("gradius: %ld\n", (long)(gradius*1e6));
                 packetbuf_clear();
                 packetbuf_copyfrom(&gradius, sizeof(real));
@@ -278,14 +250,13 @@ PROCESS_THREAD(anomaly_process, ev, data)
             char logbuf[160] = {0};
             int length = 0;
             length += sprintf(logbuf + length, "G ");
-            for (int i = 0; i < r; i++)
-                if (k.arr[idx(i, i, NUM_READINGS)] > gradius)
+            for (int i = 0; i < NUM_READINGS; i++)
+                if (k.arr[idx(i, i, NUM_READINGS)] > gradius) {
                     length += sprintf(logbuf + length, "%d ", readings[i].epoch);
+                }
             length += sprintf(logbuf + length, "\n");
             cfs_write(logfile, logbuf, strlen(logbuf));
             printf(logbuf);
-            if (r < NUM_READINGS)
-                break;
         }
 #endif
     }

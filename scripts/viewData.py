@@ -6,7 +6,7 @@ import sys
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
-colours = {'NoiseW': 'gray', 'NoiseO': 'green', 'ClusterO': 'red', 'ClusterW': 'blue'}
+colours = {'Noise': 'green', 'LocalCluster': 'blue', 'Environment': 'red'}
 ranges = {1: {}}
 
 if len(sys.argv) < 2:
@@ -25,11 +25,6 @@ with open(f'data/truth/{sys.argv[1]}.txt') as f:
                 ranges[i] = {}
             continue
         nums, tp = line.split()
-        tp = tp.split(',')
-        if len(tp) == 2:
-            tp = tp[1]
-        else:
-            tp = tp[0]
         nums = nums.split(',')
         for num in nums:
             if '-' in num:
@@ -42,7 +37,10 @@ with open(f'data/truth/{sys.argv[1]}.txt') as f:
                 ranges[i][(a,)] = tp
 
 if sys.argv[1] == 'HIWS':
-    df = pd.read_csv('data/HIWS', sep=' ', names=('Epoch', 'WSPD', 'WDIR', 'AIRT', 'ATMP', 'RELH', 'RAIN'), index_col='Epoch')
+    df = pd.read_csv('data/HIWS',
+                     sep=' ',
+                     names=('Epoch', 'WSPD', 'WDIR', 'AIRT', 'ATMP', 'RELH', 'RAIN'),
+                     index_col='Epoch')
     c = ['black']*len(df.index)
     for nums in ranges[1]:
         if len(nums) == 1:
@@ -136,4 +134,27 @@ elif sys.argv[1] == 'StBernard':
             ax.text(x[i, 0], x[i, 1], x[i, 2], i)
         figManager = plt.get_current_fig_manager()
         figManager.window.showMaximized()
+        plt.show()
+elif sys.argv[1] == 'Banana':
+    for ID in range(1, 4):
+        df = pd.read_csv(f'data/Banana_{ID}',
+                         sep=' ',
+                         names=('Epoch', 'V1', 'V2'),
+                         index_col='Epoch')
+        c = ['black']*len(df.index)
+        for nums in ranges[1]:
+            if len(nums) == 1:
+                c[nums[0]] = colours[ranges[1][nums]]
+            else:
+                for i in range(nums[0], nums[1]+1):
+                    c[i] = colours[ranges[1][nums]]
+        fig = plt.figure()
+        ax = plt.gca()
+        ax.set_title(f"Sensor Node {ID}")
+        ax.set_xlabel('V1')
+        ax.set_ylabel('V2')
+        ax.scatter(df.V1, df.V2, c=c)
+        # ax.scatter(df.V1, df.V2, c=df.index)
+        for i in range(df.shape[0]):
+            ax.text(df.loc[i, 'V1'], df.loc[i, 'V2'], i)
         plt.show()
