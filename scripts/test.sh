@@ -21,7 +21,7 @@ then
     exit 1
 elif [ "$DATASETS" = "all" ]
 then
-    DATASETS="HIWS HITEMP Banana Banana2 StBernard"
+    DATASETS="HIWS HITEMP Banana2 StBernard"
 fi
 
 cd $CONTIKI_DIR/tools/cooja

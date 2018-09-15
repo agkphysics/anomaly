@@ -100,7 +100,7 @@
   <plugin>
     org.contikios.cooja.plugins.SimControl
     <width>280</width>
-    <z>3</z>
+    <z>0</z>
     <height>160</height>
     <location_x>400</location_x>
     <location_y>0</location_y>
@@ -116,7 +116,7 @@
       <viewport>3.656087051730892 0.0 0.0 3.656087051730892 208.03185566108425 156.85376887010594</viewport>
     </plugin_config>
     <width>400</width>
-    <z>0</z>
+    <z>2</z>
     <height>400</height>
     <location_x>1</location_x>
     <location_y>1</location_y>
@@ -129,7 +129,7 @@
       <coloring />
     </plugin_config>
     <width>1320</width>
-    <z>4</z>
+    <z>3</z>
     <height>240</height>
     <location_x>400</location_x>
     <location_y>160</location_y>
@@ -145,7 +145,7 @@
       <zoomfactor>14394.59543962134</zoomfactor>
     </plugin_config>
     <width>1720</width>
-    <z>5</z>
+    <z>4</z>
     <height>134</height>
     <location_x>0</location_x>
     <location_y>852</location_y>
@@ -157,7 +157,7 @@
       <decorations>true</decorations>
     </plugin_config>
     <width>1040</width>
-    <z>2</z>
+    <z>5</z>
     <height>160</height>
     <location_x>680</location_x>
     <location_y>0</location_y>
@@ -170,7 +170,7 @@
  * simulation with data files added to each filesystem.
  */
 
-TIMEOUT(600000, finish());
+TIMEOUT(3000000, finish());
 
 motes = mote.getSimulation().getMotes();
 for (i = 0; i &lt; motes.length; i++) {
@@ -203,4 +203,3 @@ finish = function() {
     <location_y>56</location_y>
   </plugin>
 </simconf>
-

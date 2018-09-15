@@ -226,7 +226,7 @@
   <plugin>
     org.contikios.cooja.plugins.SimControl
     <width>280</width>
-    <z>1</z>
+    <z>2</z>
     <height>160</height>
     <location_x>400</location_x>
     <location_y>0</location_y>
@@ -241,7 +241,7 @@
       <viewport>0.048518502937753276 0.0 0.0 0.048518502937753276 202.62523577592998 194.44004697912328</viewport>
     </plugin_config>
     <width>400</width>
-    <z>2</z>
+    <z>3</z>
     <height>400</height>
     <location_x>1</location_x>
     <location_y>1</location_y>
@@ -254,7 +254,7 @@
       <coloring />
     </plugin_config>
     <width>1320</width>
-    <z>4</z>
+    <z>5</z>
     <height>394</height>
     <location_x>400</location_x>
     <location_y>160</location_y>
@@ -273,15 +273,13 @@
       <mote>8</mote>
       <mote>9</mote>
       <showRadioRXTX />
-      <showRadioChannels />
-      <showRadioHW />
       <zoomfactor>7562.086775137562</zoomfactor>
     </plugin_config>
     <width>1720</width>
-    <z>5</z>
-    <height>257</height>
+    <z>1</z>
+    <height>169</height>
     <location_x>0</location_x>
-    <location_y>729</location_y>
+    <location_y>817</location_y>
   </plugin>
   <plugin>
     org.contikios.cooja.plugins.Notes
@@ -290,7 +288,7 @@
       <decorations>true</decorations>
     </plugin_config>
     <width>1040</width>
-    <z>6</z>
+    <z>4</z>
     <height>160</height>
     <location_x>680</location_x>
     <location_y>0</location_y>
@@ -303,7 +301,7 @@
  * simulation with data files added to each filesystem.
  */
 
-TIMEOUT(1200000, finish());
+TIMEOUT(5800000, finish());
 coords = [[764.7, -1376.1], [-313.1, -1692.1], [364.7, 336.4], [-846.4, -203.9], [242.4, 2150.8], [-1402.0, 1467.8], [364.7, -3251.7], [253.6, -1610.6], [-290.9, 30.6], [620.2, 1997.9]]
 
 motes = mote.getSimulation().getMotes();
@@ -333,10 +331,9 @@ finish = function() {
       <active>true</active>
     </plugin_config>
     <width>600</width>
-    <z>3</z>
+    <z>0</z>
     <height>686</height>
     <location_x>979</location_x>
     <location_y>33</location_y>
   </plugin>
 </simconf>
-

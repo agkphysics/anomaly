@@ -8,14 +8,14 @@ from glob import glob
 import pandas as pd
 import numpy as np
 
-TICKS_PER_SECOND = 4096
+TICKS_PER_SECOND = 128
 VOLTAGE = 3
 POWER_CPU = 1.800*VOLTAGE      # mW
 POWER_LPM = 0.0545*VOLTAGE     # mW
 POWER_TRANSMIT = 17.7*VOLTAGE  # mW
 POWER_LISTEN = 20.0*VOLTAGE    # mW
 
-DATASETS = ('Banana', 'Banana2', 'HIWS', 'HITEMP', 'StBernard')
+DATASETS = ('Banana2', 'HIWS', 'HITEMP', 'StBernard')
 EPOCHS = {'Banana': 460, 'Banana2': 500, 'HIWS': 575, 'HITEMP': 1151, 'StBernard': 719}
 
 def cmCalculator(d, trueD, total):
@@ -69,10 +69,14 @@ for dataset in DATASETS:
     rows = []
     for filename in filenames:
         ID = int(os.path.basename(filename))
-        with open(filename) as f, open(filename + '_processed', 'w') as g:
-            powerMetrics = []
-            L = []
-            G = []
+        splits = filename.split(os.path.sep)
+        testID = int(splits[-2][4:])
+        testType = splits[-3]
+        powerMetrics = []
+        L = []
+        G = []
+        A = []
+        with open(filename) as f:
             for line in f:
                 if line.startswith('L'):
                     epochs = line[2:].strip().split()
@@ -80,9 +84,14 @@ for dataset in DATASETS:
                 elif line.startswith('G'):
                     epochs = line[2:].strip().split()
                     G.extend(epochs)
+                elif line.startswith('A'):
+                    epochs = line[2:].strip().split()
+                    A.extend(epochs)
                 else:
                     clock, cpu, lpm, send, listen = map(int, line.strip().split())
                     nonRadioTime = cpu + lpm
+                    if nonRadioTime == 0:  # Needed for some initial readings
+                        continue
                     clock /= TICKS_PER_SECOND
                     cpu *= POWER_CPU/nonRadioTime
                     lpm *= POWER_LPM/nonRadioTime
@@ -90,59 +99,63 @@ for dataset in DATASETS:
                     listen *= POWER_LISTEN/nonRadioTime
                     powerMetrics.append((clock, cpu, lpm, send, listen))
 
+        L = list(map(int, L))
+        G = list(map(int, G))
+        A = list(map(int, A))
+        U = set(L).union(set(G))
+        In = set(L).intersection(set(G))
+        if dataset == 'HIWS':
+            In = set(L)
+        if testType == 'adaptive':
+            In = set(A)
+
+        with open(filename + '_processed', 'w') as g:
             print('Power Usage', file=g)
             for clock, cpu, lpm, send, listen in powerMetrics:
                 print(clock, cpu, lpm, send, listen, file=g)
             print(file=g)
-            print('Local Anomalies', file=g)
-            print(' '.join(L), file=g)
-            print(file=g)
-            print('Global Anomalies', file=g)
-            print(' '.join(G), file=g)
+            print('Anomalies', file=g)
+            print(' '.join(map(str, In)), file=g)
 
-            powerMetrics = np.array(powerMetrics)
-            meanPower = powerMetrics.mean(0)
-            meanPower = meanPower[1:]  # ignore clock
+        powerMetrics = np.array(powerMetrics)
+        meanPower = powerMetrics.mean(0)
+        meanPower = meanPower[1:]  # ignore clock
 
-            anomalies = dict((x, set()) for x in ['all', 'Noise', 'LocalCluster', 'Environment'])
-            for k in ranges[ID]:
-                if len(k) == 2:
-                    nums = range(k[0], k[1]+1)
-                else:
-                    nums = [k[0]]
-                anomalies[ranges[ID][k]].update(nums)
-                anomalies['all'].update(nums)
+        anomalies = dict((x, set()) for x in ['all', 'Noise', 'LocalCluster', 'Environment'])
+        for k in ranges[ID]:
+            if len(k) == 2:
+                nums = range(k[0], k[1]+1)
+            else:
+                nums = [k[0]]
+            anomalies[ranges[ID][k]].update(nums)
+            anomalies['all'].update(nums)
 
-            L = list(map(int, L))
-            G = list(map(int, G))
-            U = set(L).union(set(G))
-            In = set(L).intersection(set(G))
-            if dataset == 'HIWS':
-                In = set(L)
+        row = [testID, testType, ID]
 
-            splits = filename.split(os.path.sep)
-            testID = int(splits[-2][4:])
-            testType = splits[-3]
-            row = [testID, testType, ID]
+        row.extend(cmCalculator(L, anomalies['all'], EPOCHS[dataset]))
+        row.extend(cmCalculator(G, anomalies['all'], EPOCHS[dataset]))
+        row.extend(cmCalculator(U, anomalies['all'], EPOCHS[dataset]))
 
-            row.extend(cmCalculator(L, anomalies['all'], EPOCHS[dataset]))
-            row.extend(cmCalculator(G, anomalies['all'], EPOCHS[dataset]))
-            row.extend(cmCalculator(U, anomalies['all'], EPOCHS[dataset]))
-            row.extend(cmCalculator(In, anomalies['all'], EPOCHS[dataset]))
-
+        if len(L) > 0 or len(G) > 0:
             row.extend(cmCalculator(In, anomalies['Noise'], EPOCHS[dataset]))
             row.extend(cmCalculator(In, anomalies['LocalCluster'], EPOCHS[dataset]))
             row.extend(cmCalculator(In, anomalies['Environment'], EPOCHS[dataset]))
-            row.extend(meanPower)
-            rows.append(row)
+            row.extend(cmCalculator(In, anomalies['all'], EPOCHS[dataset]))
+        else:
+            row.extend(cmCalculator(A, anomalies['Noise'], EPOCHS[dataset]))
+            row.extend(cmCalculator(A, anomalies['LocalCluster'], EPOCHS[dataset]))
+            row.extend(cmCalculator(A, anomalies['Environment'], EPOCHS[dataset]))
+            row.extend(cmCalculator(A, anomalies['all'], EPOCHS[dataset]))
+        row.extend(meanPower)
+        rows.append(row)
     df = pd.DataFrame(rows, columns=('TestID', 'Test', 'NodeID',
                                      'LTP', 'LFP', 'LFN', 'LTN', 'Ltpr', 'Lprec', 'LF1Score',
                                      'GTP', 'GFP', 'GFN', 'GTN', 'Gtpr', 'Gprec', 'GF1Score',
                                      'UTP', 'UFP', 'UFN', 'UTN', 'Utpr', 'Uprec', 'UF1Score',
-                                     'ITP', 'IFP', 'IFN', 'ITN', 'Itpr', 'Iprec', 'IF1Score',
                                      'NTP', 'NFP', 'NFN', 'NTN', 'Ntpr', 'Nprec', 'NF1Score',
                                      'LCTP', 'LCFP', 'LCFN', 'LCTN', 'LCtpr', 'LCprec', 'LCF1Score',
                                      'ETP', 'EFP', 'EFN', 'ETN', 'Etpr', 'Eprec', 'EF1Score',
+                                     'ATP', 'AFP', 'AFN', 'ATN', 'Atpr', 'Aprec', 'AF1Score',
                                      'CPU', 'LPM', 'Tx', 'Listen'))
     df = df.astype({'TestID': int})
     df = pd.merge(tests, df, on='TestID')
@@ -156,10 +169,10 @@ df = df.reset_index()
 df.to_excel('logs/all.xlsx', 'Data')
 
 df.where(df['Normalised'] == 1) \
-    .groupby(['Dataset', 'n', 'nu', 'sigma', 'Test']) \
+    .groupby(['Dataset', 'Test', 'Adaptive', 'M', 'n', 'nu', 'sigma', 'TestID']) \
     .median() \
-    .reindex(columns=('Itpr', 'Iprec', 'IF1Score',
-                      'Ntpr', 'Nprec', 'NF1Score',
+    .reindex(columns=('Ntpr', 'Nprec', 'NF1Score',
                       'LCtpr', 'LCprec', 'LCF1Score',
-                      'Etpr', 'Eprec', 'EF1Score')) \
+                      'Etpr', 'Eprec', 'EF1Score',
+                      'Atpr', 'Aprec', 'AF1Score')) \
     .to_excel('logs/summary.xlsx', 'Data')

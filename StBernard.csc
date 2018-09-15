@@ -6,7 +6,6 @@
   <project EXPORT="discard">[APPS_DIR]/serial_socket</project>
   <project EXPORT="discard">[APPS_DIR]/collect-view</project>
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
-  <project EXPORT="discard">[APPS_DIR]/gdbstub</project>
   <simulation>
     <title>StBernard</title>
     <randomseed>123456</randomseed>
@@ -208,7 +207,7 @@
  * simulation with data files added to each filesystem.
  */
 
-TIMEOUT(900000, finish());
+TIMEOUT(3600000, finish());
 coords = [[66.2, 51.6, 16.6], [-48.8, -70.4, -24.4], [-6.8, -128.4, 7.6], [6.2, 8.6, -5.4], [-16.8, 138.6, 5.6]];
 
 motes = mote.getSimulation().getMotes();
@@ -244,4 +243,3 @@ finish = function() {
     <location_y>47</location_y>
   </plugin>
 </simconf>
-

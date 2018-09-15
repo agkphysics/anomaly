@@ -170,7 +170,7 @@
  * simulation with data files added to each filesystem.
  */
 
-TIMEOUT(600000, finish());
+TIMEOUT(2500000, finish());
 
 motes = mote.getSimulation().getMotes();
 for (i = 0; i &lt; motes.length; i++) {

@@ -1,5 +1,5 @@
 /*
- * anomaly-adaptive.c - Main source file for anomaly detection
+ * anomaly-periodic.c - Main source file for anomaly detection
  *
  * Author: Aaron Keesing
  */
@@ -28,7 +28,7 @@ static real rList[NUM_SENSORS];
 static real rListSorted[NUM_SENSORS];
 static int children;
 static long lastCPU, lastTransmit, lastLPM, lastListen, lastClockTime;
-static int period = 0;
+static int period;
 
 static struct etimer periodTimer;
 
@@ -145,6 +145,7 @@ PROCESS_THREAD(anomaly_process, ev, data)
     static size_t length = 0;
     static int epoch = 0; // For debug purposes
     static int r;
+    period = 0;
     lastCPU = lastTransmit = lastLPM = lastListen = lastClockTime = 0;
 
     /* Initial data */
@@ -269,12 +270,15 @@ PROCESS_THREAD(anomaly_process, ev, data)
             sum /= (real)NUM_READINGS;
             real dc = sqrtf(1.0 + sum);
             //printf("lradius = %ld, gradius = %ld, dc = %ld\n", l(lradius), l(gradius), l(dc));
-            if (!(dc > lradius && dc > gradius)) { // Not outlier
+            if (dc > lradius && dc > gradius) { // Outlier
+                loglength += sprintf(logbuf + loglength, "A %d\n", readings[r].epoch);
+                cfs_write(logfile, logbuf, strlen(logbuf));
+                printf(logbuf);
+            }
+
+            if (period % M != 0) { // Periodic updates only
                 continue;
             }
-            loglength += sprintf(logbuf + loglength, "A %d\n", readings[r].epoch);
-            cfs_write(logfile, logbuf, strlen(logbuf));
-            printf(logbuf);
 
             for (int i = 0; i < NUM_READINGS; i++) {
                 real vals1[VAL_LEN];

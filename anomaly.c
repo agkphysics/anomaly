@@ -1,5 +1,5 @@
 /*
- * anomaly-test.c - Main source file for anomaly detection
+ * anomaly-original.c - Main source file for anomaly detection
  *
  * Author: Aaron Keesing
  */
@@ -7,7 +7,6 @@
 #include "contiki.h"
 #include "contiki-conf.h"
 #include "net/rime/runicast.h"
-//#include "net/mac/tsch/tsch.h"
 #include "dev/watchdog.h"
 #include "cfs/cfs.h"
 

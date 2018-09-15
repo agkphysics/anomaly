@@ -5,61 +5,100 @@ from mpl_toolkits.mplot3d import Axes3D
 import sys
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+import argparse
+from glob import glob
+import os.path
 
 colours = {'Noise': 'green', 'LocalCluster': 'blue', 'Environment': 'red'}
-ranges = {1: {}}
+ranges = {}
 
-if len(sys.argv) < 2:
-    print('Please specify which dataset to view.', file=sys.stderr)
-    sys.exit(1)
+parser = argparse.ArgumentParser(description="View data with various formatting")
+parser.add_argument('dataset', help="the dataset to view")
+parser.add_argument('--std', action='store_true', help="standardise the data")
+parser.add_argument('--text', action='store_true', help="show epoch labels")
+subparsers = parser.add_subparsers(dest='type', required=True, title="type of data")
+subparsers.add_parser('truth')
+subparsers.add_parser('epoch')
+testParser = subparsers.add_parser('test')
+testParser.add_argument('test', metavar='N', type=int, help="the test to view")
 
-with open(f'data/truth/{sys.argv[1]}.txt') as f:
-    i = 1
-    for line in f:
-        line = line.strip()
-        if len(line) == 0:
-            continue
-        if line.startswith('#'):
-            i = int(line[1:])
-            if i not in ranges:
-                ranges[i] = {}
-            continue
-        nums, tp = line.split()
-        nums = nums.split(',')
-        for num in nums:
-            if '-' in num:
-                a, b = num.split('-')
-                a = int(a)
-                b = int(b)
-                ranges[i][(a, b)] = tp
-            else:
-                a = int(num)
-                ranges[i][(a,)] = tp
+args = parser.parse_args()
+dataset = args.dataset
+standardise = args.std
 
-if sys.argv[1] == 'HIWS':
+if args.type == 'truth':
+    with open(f'data/truth/{dataset}.txt') as f:
+        i = 1
+        for line in f:
+            line = line.strip()
+            if len(line) == 0:
+                continue
+            if line.startswith('#'):
+                i = int(line[1:])
+                if i not in ranges:
+                    ranges[i] = {}
+                continue
+            nums, tp = line.split()
+            nums = nums.split(',')
+            for num in nums:
+                if '-' in num:
+                    a, b = num.split('-')
+                    a = int(a)
+                    b = int(b)
+                    ranges[i][(a, b)] = tp
+                else:
+                    a = int(num)
+                    ranges[i][(a,)] = tp
+elif args.type == 'test':
+    files = [f for f in glob(f'logs/{dataset}/**/Test{args.test}/*')
+             if os.path.basename(f).isnumeric()]
+    for file in files:
+        ID = int(os.path.basename(file))
+        ranges[ID] = {}
+        with open(f'{file}_processed') as f:
+            for line in f:
+                if line.startswith('Anomalies'):
+                    break
+            anomalies = list(map(int, next(f).strip().split()))
+            for a in anomalies:
+                ranges[ID][(a,)] = 'Noise'
+
+pca = PCA(3)
+std = StandardScaler()
+
+if dataset == 'HIWS':
     df = pd.read_csv('data/HIWS',
                      sep=' ',
                      names=('Epoch', 'WSPD', 'WDIR', 'AIRT', 'ATMP', 'RELH', 'RAIN'),
                      index_col='Epoch')
-    c = ['black']*len(df.index)
-    for nums in ranges[1]:
-        if len(nums) == 1:
-            c[nums[0]] = colours[ranges[1][nums]]
-        else:
-            for i in range(nums[0], nums[1]+1):
-                c[i] = colours[ranges[1][nums]]
+    if args.std:
+        x = pca.fit_transform(std.fit_transform(df))
+    else:
+        x = pca.fit_transform(df)
 
-    pca = PCA(3, whiten=True)
-    std = StandardScaler().fit_transform(df)
-    x = pca.fit_transform(df)
     fig = plt.figure()
     ax = Axes3D(fig)
     plt.title("Sensor Node")
-    sc = ax.scatter(*x.T, c=c)
-    # plt.scatter(*x.T, c=df.index)
+    ax.set_xlabel('PC1')
+    ax.set_ylabel('PC2')
+    ax.set_zlabel('PC3')
 
-    for i in range(df.shape[0]):
-        ax.text(x[i, 0], x[i, 1], x[i, 2], i)
+    if args.type in ['truth', 'test']:
+        c = ['black']*len(df.index)
+        for nums in ranges[1]:
+            if len(nums) == 1:
+                c[nums[0]] = colours[ranges[1][nums]]
+            else:
+                for i in range(nums[0], nums[1]+1):
+                    c[i] = colours[ranges[1][nums]]
+        sc = ax.scatter(*x.T, c=c, depthshade=False)
+    else:
+        sc = ax.scatter(*x.T, c=df.index, depthshade=False)
+        cbar = fig.colorbar(sc, ax=ax, fraction=0.1, shrink=0.8)
+        cbar.set_label('Epoch')
+    if args.text:
+        for i in range(df.shape[0]):
+            ax.text(x[i, 0], x[i, 1], x[i, 2], i)
     plt.show()
     sys.exit()
 
@@ -78,7 +117,7 @@ if sys.argv[1] == 'HIWS':
         plt.ylabel(var)
         plt.draw()
     plt.show()
-elif sys.argv[1] == 'HITEMP':
+elif dataset == 'HITEMP':
     fig = plt.figure()
     ax = plt.axes()
     ax.set_title('Combined water temperature data')
@@ -112,49 +151,91 @@ elif sys.argv[1] == 'HITEMP':
                 rect = plt.Rectangle([nums[0], ymin], nums[1] - nums[0], ymax - ymin, color=colours[ranges[ID][nums]], alpha=0.1)
             plt.gca().add_patch(rect)
         plt.show()
-elif sys.argv[1] == 'StBernard':
-    for ID in range(1, 6):
+elif dataset == 'StBernard':
+    dfAll = []
+    for ID in [1, 2, 3, 4, 5]:
         df = pd.read_csv(f'data/StBernard_{ID}',
                          sep=' ',
                          names=('Epoch', 'Ambient', 'Surface', 'Radiation', 'Humidity',
                                 'SoilMoisture', 'Watermark', 'Rain', 'WindSpeed', 'WindDir'),
                          index_col='Epoch')
-        pca = PCA(3, whiten=True)
-        std = StandardScaler().fit_transform(df)
-        x = pca.fit_transform(std)
+        dfAll.append(df)
+    dfAll = pd.concat(dfAll, keys=[1, 2, 3, 4, 5])
+    std = std.fit(dfAll)
+    if args.std:
+        pca = pca.fit(std.transform(dfAll))
+    else:
+        pca = pca.fit(dfAll)
+    fig = plt.figure()
+    ax = Axes3D(fig)
+    ax.set_title(f"All Nodes")
+    ax.set_xlabel('PC1')
+    ax.set_ylabel('PC2')
+    ax.set_zlabel('PC3')
+    for ID in [1, 2, 3, 4, 5]:
+        df = dfAll.loc[ID, :]
+        if args.std:
+            x = pca.transform(std.transform(df))
+        else:
+            x = pca.transform(df)
+        ax.scatter(*x.T, s=1)
+    plt.show()
+
+    for ID in [1, 2, 3, 4, 5]:
+        df = dfAll.loc[ID, :]
+        if args.std:
+            x = pca.transform(std.transform(df))
+        else:
+            x = pca.transform(df)
+
         fig = plt.figure()
         ax = Axes3D(fig)
         ax.set_title(f"Sensor Node {ID}")
         ax.set_xlabel('PC1')
         ax.set_ylabel('PC2')
         ax.set_zlabel('PC3')
-        ax.scatter(*x.T, c=df.index)
-        # ax.plot(*x.T)
-        for i in range(df.shape[0]):
-            ax.text(x[i, 0], x[i, 1], x[i, 2], i)
-        figManager = plt.get_current_fig_manager()
-        figManager.window.showMaximized()
+
+        if args.type in ['truth', 'test']:
+            c = ['black']*len(df.index)
+            for nums in ranges[ID]:
+                if len(nums) == 1:
+                    c[nums[0]] = colours[ranges[ID][nums]]
+                else:
+                    for i in range(nums[0], nums[1]+1):
+                        c[i] = colours[ranges[ID][nums]]
+            ax.scatter(*x.T, c=c)
+        else:
+            ax.scatter(*x.T, c=df.index)
+        if args.text:
+            for i in range(df.shape[0]):
+                ax.text(x[i, 0], x[i, 1], x[i, 2], i)
+
+        # figManager = plt.get_current_fig_manager()
+        # figManager.window.showMaximized()
         plt.show()
-elif sys.argv[1] == 'Banana':
-    for ID in range(1, 4):
-        df = pd.read_csv(f'data/Banana_{ID}',
+elif dataset == 'Banana2':
+    for ID in [1, 2, 3]:
+        df = pd.read_csv(f'data/Banana2_{ID}',
                          sep=' ',
                          names=('Epoch', 'V1', 'V2'),
                          index_col='Epoch')
-        c = ['black']*len(df.index)
-        for nums in ranges[1]:
-            if len(nums) == 1:
-                c[nums[0]] = colours[ranges[1][nums]]
-            else:
-                for i in range(nums[0], nums[1]+1):
-                    c[i] = colours[ranges[1][nums]]
         fig = plt.figure()
         ax = plt.gca()
         ax.set_title(f"Sensor Node {ID}")
         ax.set_xlabel('V1')
         ax.set_ylabel('V2')
-        ax.scatter(df.V1, df.V2, c=c)
-        # ax.scatter(df.V1, df.V2, c=df.index)
-        for i in range(df.shape[0]):
-            ax.text(df.loc[i, 'V1'], df.loc[i, 'V2'], i)
+        if args.type in ['truth', 'test']:
+            c = ['black']*len(df.index)
+            for nums in ranges[ID]:
+                if len(nums) == 1:
+                    c[nums[0]] = colours[ranges[ID][nums]]
+                else:
+                    for i in range(nums[0], nums[1]+1):
+                        c[i] = colours[ranges[ID][nums]]
+            ax.scatter(df.V1, df.V2, c=c)
+        else:
+            ax.scatter(df.V1, df.V2, c=df.index)
+        if args.text:
+            for i in range(df.shape[0]):
+                ax.text(df.loc[i, 'V1'], df.loc[i, 'V2'], i)
         plt.show()
