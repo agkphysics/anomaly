@@ -213,9 +213,9 @@ elif dataset == 'StBernard':
         # figManager = plt.get_current_fig_manager()
         # figManager.window.showMaximized()
         plt.show()
-elif dataset == 'Banana2':
+elif dataset in ['Banana2', 'Noise']:
     for ID in [1, 2, 3]:
-        df = pd.read_csv(f'data/Banana2_{ID}',
+        df = pd.read_csv(f'data/{dataset}_{ID}',
                          sep=' ',
                          names=('Epoch', 'V1', 'V2'),
                          index_col='Epoch')
@@ -232,6 +232,10 @@ elif dataset == 'Banana2':
                 else:
                     for i in range(nums[0], nums[1]+1):
                         c[i] = colours[ranges[ID][nums]]
+            # for i in range(0, df.shape[0], 30):
+            #     plt.figure()
+            #     plt.scatter(df.V1.iloc[i:i+30], df.V2.iloc[i:i+30], c=c[i:i+30])
+            #     plt.show()
             ax.scatter(df.V1, df.V2, c=c)
         else:
             ax.scatter(df.V1, df.V2, c=df.index)

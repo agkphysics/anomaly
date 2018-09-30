@@ -10,13 +10,11 @@
 #include <math.h>
 
 #define BUF_LEN 60
+
 #define NUM_READINGS 35
-#define NU 0.3
-
-#define M 50
-
-/* RBF width parameter */
-#define SIG 2
+#define NU 0.4  /* Anomaly proportion parameter */
+#define M 200  /* Update interval for periodic */
+#define SIG 0.2  /* RBF width parameter */
 
 #ifdef NATIVE
     #define NAME(name) "data/" #name

@@ -7,7 +7,7 @@
   <project EXPORT="discard">[APPS_DIR]/collect-view</project>
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
   <simulation>
-    <title>Banana2</title>
+    <title>Noise</title>
     <randomseed>123456</randomseed>
     <motedelay_us>0</motedelay_us>
     <radiomedium>
@@ -25,7 +25,7 @@
       <identifier>z11</identifier>
       <description>Sensor Node</description>
       <source EXPORT="discard">[CONFIG_DIR]/anomaly.c</source>
-      <commands EXPORT="discard">make TARGET=z1 DATASET=banana2</commands>
+      <commands EXPORT="discard">make TARGET=z1 DATASET=noise</commands>
       <firmware EXPORT="copy">[CONFIG_DIR]/anomaly.z1</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
@@ -179,7 +179,7 @@ for (i = 0; i &lt; motes.length; i++) {
 
     fs = mote.getInterfaces().get("Filesystem");
     log.log(id.toString() + " ");
-    if (fs.insertFile("/home/aaron/src/anomaly/data/Banana2_" + id.toString()))
+    if (fs.insertFile("/home/aaron/src/anomaly/data/Noise_" + id.toString()))
         log.log("Succeeded\n");
     else
         log.log("Failed\n");
@@ -190,7 +190,7 @@ finish = function() {
         mote = motes[i];
         id = mote.getID();
         fs = mote.getInterfaces().get("Filesystem");
-        fs.extractFile("log", "/home/aaron/src/anomaly/logs/Banana2/" + id.toString());
+        fs.extractFile("log", "/home/aaron/src/anomaly/logs/Noise/" + id.toString());
         log.log("Extracted " + id.toString() + "\n");
     }
 }</script>

@@ -15,8 +15,9 @@ POWER_LPM = 0.0545*VOLTAGE     # mW
 POWER_TRANSMIT = 17.7*VOLTAGE  # mW
 POWER_LISTEN = 20.0*VOLTAGE    # mW
 
-DATASETS = ('Banana2', 'HIWS', 'HITEMP', 'StBernard')
-EPOCHS = {'Banana': 460, 'Banana2': 500, 'HIWS': 575, 'HITEMP': 1151, 'StBernard': 719}
+DATASETS = ('Banana2', 'Noise1', 'Noise2', 'Noise3', 'Noise4', 'Noise5', 'HIWS', 'HITEMP', 'StBernard')
+EPOCHS = {'Banana': 460, 'Banana2': 500, 'Noise1': 500, 'Noise2': 500, 'Noise3': 500, 'Noise4': 500, 'Noise5': 500,
+          'HIWS': 575, 'HITEMP': 1151, 'StBernard': 719}
 
 def cmCalculator(d, trueD, total):
     tp = len(trueD.intersection(d))
@@ -71,6 +72,8 @@ for dataset in DATASETS:
         ID = int(os.path.basename(filename))
         splits = filename.split(os.path.sep)
         testID = int(splits[-2][4:])
+        if not tests['TestID'].isin([testID]).any():
+            continue
         testType = splits[-3]
         powerMetrics = []
         L = []
@@ -132,10 +135,6 @@ for dataset in DATASETS:
 
         row = [testID, testType, ID]
 
-        row.extend(cmCalculator(L, anomalies['all'], EPOCHS[dataset]))
-        row.extend(cmCalculator(G, anomalies['all'], EPOCHS[dataset]))
-        row.extend(cmCalculator(U, anomalies['all'], EPOCHS[dataset]))
-
         if len(L) > 0 or len(G) > 0:
             row.extend(cmCalculator(In, anomalies['Noise'], EPOCHS[dataset]))
             row.extend(cmCalculator(In, anomalies['LocalCluster'], EPOCHS[dataset]))
@@ -149,30 +148,38 @@ for dataset in DATASETS:
         row.extend(meanPower)
         rows.append(row)
     df = pd.DataFrame(rows, columns=('TestID', 'Test', 'NodeID',
-                                     'LTP', 'LFP', 'LFN', 'LTN', 'Ltpr', 'Lprec', 'LF1Score',
-                                     'GTP', 'GFP', 'GFN', 'GTN', 'Gtpr', 'Gprec', 'GF1Score',
-                                     'UTP', 'UFP', 'UFN', 'UTN', 'Utpr', 'Uprec', 'UF1Score',
                                      'NTP', 'NFP', 'NFN', 'NTN', 'Ntpr', 'Nprec', 'NF1Score',
                                      'LCTP', 'LCFP', 'LCFN', 'LCTN', 'LCtpr', 'LCprec', 'LCF1Score',
                                      'ETP', 'EFP', 'EFN', 'ETN', 'Etpr', 'Eprec', 'EF1Score',
                                      'ATP', 'AFP', 'AFN', 'ATN', 'Atpr', 'Aprec', 'AF1Score',
                                      'CPU', 'LPM', 'Tx', 'Listen'))
     df = df.astype({'TestID': int})
-    df = pd.merge(tests, df, on='TestID')
+    df = pd.merge(tests, df, on=['TestID', 'Test'])
     df = df.set_index('TestID')
     df = df.sort_values(['Test', 'NodeID'])
-    df.to_html(f'logs/{dataset}/results.html')
     df.to_excel(f'logs/{dataset}/results.xlsx', 'Data')
     df_all[dataset] = df
 df = pd.concat(df_all, join='inner', names=['Dataset'])
 df = df.reset_index()
 df.to_excel('logs/all.xlsx', 'Data')
 
-df.where(df['Normalised'] == 1) \
-    .groupby(['Dataset', 'Test', 'Adaptive', 'M', 'n', 'nu', 'sigma', 'TestID']) \
+df = df.groupby(['Dataset', 'Algorithm', 'M', 'n', 'nu', 'sigma', 'TestID']) \
     .median() \
     .reindex(columns=('Ntpr', 'Nprec', 'NF1Score',
                       'LCtpr', 'LCprec', 'LCF1Score',
                       'Etpr', 'Eprec', 'EF1Score',
-                      'Atpr', 'Aprec', 'AF1Score')) \
-    .to_excel('logs/summary.xlsx', 'Data')
+                      'Atpr', 'Aprec', 'AF1Score'))
+df.round(2) \
+    .drop(columns=['Ntpr', 'Nprec', 'NF1Score', 'LCtpr', 'LCprec', 'LCF1Score', 'Etpr', 'Eprec', 'EF1Score']) \
+    .to_latex('logs/summary.tex', bold_rows=True)
+
+colHeaders = [['Noise']*3 + ['LocalCluster']*3 + ['Environment']*3 + ['All']*3,
+              ['Ntpr', 'Nprec', 'NF1Score', 'LCtpr', 'LCprec', 'LCF1Score', 'Etpr', 'Eprec', 'EF1Score', 'Atpr', 'Aprec', 'AF1Score']]
+df.columns = pd.MultiIndex.from_tuples(zip(*colHeaders), names=['Type', 'Metric'])
+df.to_excel('logs/summary.xlsx', 'Data')
+
+for dataset in DATASETS:
+    df.loc[dataset, :].to_excel(f'logs/{dataset}/summary.xlsx')
+    df.loc[dataset, :].round(2).to_latex(f'logs/{dataset}/summary.tex', bold_rows=True)
+    for algorithm in ['Adaptive', 'Periodic', 'Original']:
+        df.loc[(dataset, algorithm), :].round(2).to_latex(f'logs/{dataset}/summary_{algorithm}.tex', bold_rows=True)
