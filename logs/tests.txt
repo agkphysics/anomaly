@@ -137,3 +137,8 @@ TestID Test n nu sigma Algorithm M
 181 normalised 20 0.4 0.2 Original -1
 182 normalised 35 0.4 0.2 Original -1
 183 normalised 35 0.2 0.05 Original -1
+184 adaptive 30 0.2 0.1 Periodic 1500
+185 adaptive 30 0.2 0.1 Periodic 200
+186 adaptive 30 0.2 0.1 Periodic 100
+187 adaptive 30 0.2 0.1 Periodic 50
+188 adaptive 30 0.2 0.1 Periodic 20

@@ -4,6 +4,7 @@
 /logs/*
 !/logs/tests.txt
 .vscode/
+anomaly.c
 
 *.map
 *.a

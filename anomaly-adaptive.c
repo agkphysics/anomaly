@@ -23,6 +23,7 @@ AUTOSTART_PROCESSES(&anomaly_process);
 static Mat k;
 static Vec d;
 static sensorval readings[NUM_READINGS];
+static sensorval window[NUM_READINGS];
 static real lradius, gradius;
 static real rList[NUM_SENSORS];
 static real rListSorted[NUM_SENSORS];
@@ -155,6 +156,7 @@ PROCESS_THREAD(anomaly_process, ev, data)
         length = buf + BUF_LEN - p;
         memmove(buf, p, length);
     }
+    r = 0;
 
     for (int i = 0; i < NUM_READINGS; i++) {
         real vals1[VAL_LEN];
@@ -252,13 +254,13 @@ PROCESS_THREAD(anomaly_process, ev, data)
 
             if (cfs_read(fp, buf + length, BUF_LEN - length) <= 0)
                 break;
-            char *p = getNextReading(buf, &readings[r]);
+            char *p = getNextReading(buf, &window[r]);
             p += strlen(p) + 1;
             length = buf + BUF_LEN - p;
             memmove(buf, p, length);
             r = (r + 1) % NUM_READINGS;
             real vals[VAL_LEN];
-            getVector(&readings[r], vals);
+            getVector(&window[r], vals);
             //real kxx = rbf(vals, vals, VAL_LEN);
             real sum = 0;
             for (int i = 0; i < NUM_READINGS; i++) {
@@ -272,9 +274,12 @@ PROCESS_THREAD(anomaly_process, ev, data)
             if (!(dc > lradius && dc > gradius)) { // Not outlier
                 continue;
             }
-            loglength += sprintf(logbuf + loglength, "A %d\n", readings[r].epoch);
+            loglength += sprintf(logbuf + loglength, "A %d\n", window[r].epoch);
             cfs_write(logfile, logbuf, strlen(logbuf));
             printf(logbuf);
+
+            for (int i = 0; i < NUM_READINGS; i++)
+                readings[i] = window[i];
 
             for (int i = 0; i < NUM_READINGS; i++) {
                 real vals1[VAL_LEN];

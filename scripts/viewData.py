@@ -213,7 +213,7 @@ elif dataset == 'StBernard':
         # figManager = plt.get_current_fig_manager()
         # figManager.window.showMaximized()
         plt.show()
-elif dataset in ['Banana2', 'Noise']:
+elif dataset == 'Banana2' or dataset.startswith('Noise'):
     for ID in [1, 2, 3]:
         df = pd.read_csv(f'data/{dataset}_{ID}',
                          sep=' ',
